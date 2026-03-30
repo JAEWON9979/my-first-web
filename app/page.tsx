@@ -9,6 +9,7 @@ type Post = {
   title: string;
   summary: string;
   date: string;
+  author: string;
   category: Exclude<TabKey, "all">;
   tag: string;
 };
@@ -16,28 +17,38 @@ type Post = {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
 
+  const tabTitle: Record<TabKey, string> = {
+    all: "전체글",
+    goal: "목표",
+    study: "수업일지",
+    project: "프로젝트",
+  };
+
   const posts: Post[] = [
     {
       id: 1,
       title: "2026년 자격증 목표",
-      summary: "컴활 1급, ADsp(데이터분석준전문가), 사회조사분석사 2급 취득하기",
+      summary: "미리보기 : 컴활 1급, ADsp(데이터분석준전문가), 사회조사분석사 2급 취득하기",
       date: "~ 2026. 12. 31",
+      author: "김재원",
       category: "goal",
       tag: "목표",
     },
     {
       id: 2,
       title: "웹프로그래밍 블로그 생성 및 vercel 배포",
-      summary: "copilot chat을 이용한 기본 블로그 생성 및 자기소개.",
+      summary: "미리보기 : copilot chat을 이용한 기본 블로그 생성 및 자기소개.",
       date: "2026.03.25",
+      author: "김재원",
       category: "study",
       tag: "수업일지",
     },
     {
       id: 3,
       title: "프로젝트 미진행중",
-      summary: "추후 진행 예정",
+      summary: "미리보기 : 추후 진행 예정",
       date: "~ 2026.12.31",
+      author: "김재원",
       category: "project",
       tag: "프로젝트",
     },
@@ -52,7 +63,7 @@ export default function Home() {
   }, [activeTab]);
 
   return (
-    <main className="min-h-screen bg-slate-100 pb-10 md:pb-12">
+    <main className="min-h-screen bg-slate-100 pb-10 md:pb-24">
       <header className="border-b border-slate-300 bg-white">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-6">
           <div>
@@ -97,6 +108,7 @@ export default function Home() {
               >
                 전체글
               </button>
+
             </li>
             <li>
               <button
@@ -143,21 +155,24 @@ export default function Home() {
 
       <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 md:grid-cols-[1fr_300px] md:px-6">
         <section className="flex min-h-[68vh] flex-col border border-slate-300 bg-white">
-          <div className="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-800">
-            {activeTab === "all" ? "전체 게시글" : "선택된 카테고리"}
-          </div>
+          <h2 className="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-800">
+            {tabTitle[activeTab]}
+          </h2>
 
           {filteredPosts.length > 0 ? (
-            <ul className="flex-1">
+            <ul className="grid grid-cols-1 gap-6 p-4 md:grid-cols-2 md:p-5">
               {filteredPosts.map((post) => (
-                <li key={post.id} className="border-b border-slate-200 last:border-b-0">
-                  <article className="px-4 py-4 md:px-5">
+                <li key={post.id}>
+                  <article className="flex h-full flex-col gap-2 rounded-lg border border-slate-200 bg-white p-5 shadow transition hover:shadow-lg">
                     <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
                       <span className="font-semibold text-emerald-700">[{post.tag}]</span>
                       <span>{post.date}</span>
                     </div>
                     <h2 className="text-lg font-semibold text-slate-900">{post.title}</h2>
                     <p className="mt-2 text-sm leading-6 text-slate-600">{post.summary}</p>
+                    <div className="mt-3 text-right text-xs font-medium text-slate-500">
+                      작성자: {post.author}
+                    </div>
                   </article>
                 </li>
               ))}
