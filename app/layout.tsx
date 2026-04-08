@@ -75,9 +75,7 @@ export default function RootLayout({
           </div>
         </nav>
 
-        <main className="min-h-screen bg-slate-100 pb-10 md:pb-24 flex-grow pb-20">
-          {children}
-        </main>
+        <main>{children}</main>
 
         <footer className="fixed bottom-0 left-0 w-full z-50 bg-black py-3 px-6 text-gray-300">
           <div className="flex items-center gap-4 text-sm">

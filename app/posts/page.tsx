@@ -6,6 +6,7 @@ import { posts as initialPosts, TabKey } from "@/lib/posts";
 
 export default function PostsPage() {
   const [selectedCategory, setSelectedCategory] = useState<TabKey>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState(initialPosts);
 
   // 컴포넌트 마운트 시 localStorage에서 데이터 불러오기
@@ -31,32 +32,54 @@ export default function PostsPage() {
     { key: "project", label: "프로젝트" },
   ];
 
-  const filteredPosts = selectedCategory === "all" 
-    ? posts 
-    : posts.filter((post) => post.category === selectedCategory);
+  const filteredPosts = posts.filter((post) => {
+    const matchesCategory =
+      selectedCategory === "all" || post.category === selectedCategory;
+
+    if (!searchQuery.trim()) {
+      return matchesCategory;
+    }
+
+    const lowerQuery = searchQuery.toLowerCase();
+    const matchesSearch =
+      post.title.toLowerCase().includes(lowerQuery) ||
+      post.summary.toLowerCase().includes(lowerQuery);
+
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 md:grid-cols-[1fr_300px] md:px-6">
       <section className="flex min-h-[68vh] flex-col border border-slate-300 bg-white">
         {/* 탭 메뉴 */}
-        <div className="border-b border-slate-200 px-4 py-0">
-          <ul className="flex gap-0 text-sm">
-            {tabs.map((tab) => (
-              <li key={tab.key}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory(tab.key)}
-                  className={`px-4 py-3 font-medium border-b-2 transition ${
-                    selectedCategory === tab.key
-                      ? "text-emerald-700 font-bold border-b-2 border-emerald-700"
-                      : "text-slate-600 border-b-2 border-transparent hover:text-slate-900"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              </li>
-            ))}
-          </ul>
+        <div className="border-b border-slate-200 px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <ul className="flex gap-0 text-sm">
+              {tabs.map((tab) => (
+                <li key={tab.key}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory(tab.key)}
+                    className={`px-4 py-3 font-medium border-b-2 transition ${
+                      selectedCategory === tab.key
+                        ? "text-emerald-700 font-bold border-b-2 border-emerald-700"
+                        : "text-slate-600 border-b-2 border-transparent hover:text-slate-900"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="검색어를 입력하세요"
+              className="px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:border-emerald-500"
+            />
+          </div>
         </div>
 
         {filteredPosts.length > 0 ? (
