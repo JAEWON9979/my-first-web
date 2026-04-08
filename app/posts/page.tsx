@@ -1,29 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { posts as initialPosts, TabKey } from "@/lib/posts";
+import { posts, TabKey } from "@/lib/posts";
 
 export default function PostsPage() {
   const [selectedCategory, setSelectedCategory] = useState<TabKey>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [posts, setPosts] = useState(initialPosts);
-
-  // 컴포넌트 마운트 시 localStorage에서 데이터 불러오기
-  useEffect(() => {
-    try {
-      const storedPosts = localStorage.getItem("posts");
-      if (storedPosts) {
-        setPosts(JSON.parse(storedPosts));
-      } else {
-        // localStorage에 초기 데이터가 없으면 저장
-        localStorage.setItem("posts", JSON.stringify(initialPosts));
-      }
-    } catch (error) {
-      console.error("localStorage 불러오기 오류:", error);
-      setPosts(initialPosts);
-    }
-  }, []);
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "all", label: "전체보기" },

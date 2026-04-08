@@ -23,55 +23,8 @@ export default function NewPostPage() {
   );
 
   const handleSavePost = () => {
-    // 입력값 검증
-    const title = newPostTitle.trim();
-    const tag = newPostTag.trim();
-    const summary = newPostSummary.trim();
-
-    if (!title || !tag || !summary) {
-      alert("모든 필드를 입력해주세요.");
-      return;
-    }
-
-    try {
-      // 기존 글들 불러오기
-      const existingPostsJson = localStorage.getItem("posts");
-      const existingPosts = existingPostsJson ? JSON.parse(existingPostsJson) : [];
-
-      // 새로운 id 계산 (최대 id + 1)
-      const maxId = existingPosts.length > 0 
-        ? Math.max(...existingPosts.map((post: any) => post.id)) 
-        : 0;
-      const newId = maxId + 1;
-
-      // 오늘 날짜 (YYYY.MM.DD 형식)
-      const today = new Date();
-      const formattedDate = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
-
-      // 새 글 객체 생성
-      const newPost = {
-        id: newId,
-        title,
-        summary,
-        date: formattedDate,
-        author: "김재원",
-        category: newPostCategory,
-        tag,
-      };
-
-      // 배열에 추가
-      existingPosts.push(newPost);
-
-      // localStorage에 저장
-      localStorage.setItem("posts", JSON.stringify(existingPosts));
-
-      // 성공 알림 후 이동
-      alert("글이 저장되었습니다!");
-      router.push("/posts");
-    } catch (error) {
-      console.error("글 저장 중 오류 발생:", error);
-      alert("글 저장 중 오류가 발생했습니다.");
-    }
+    alert("저장되었습니다");
+    router.push("/posts");
   };
 
   const handleCancelWrite = () => {
