@@ -3,6 +3,12 @@ import Link from "next/link";
 import "./globals.css";
 import ThemeProvider from "./components/ThemeProvider";
 import ThemeToggle from "./components/ThemeToggle";
+import ToastProvider from "./components/ToastProvider";
+import { AuthProvider } from "@/lib/AuthContext";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "내 블로그",
@@ -15,9 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="ko" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <body className="flex min-h-screen flex-col bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100">
+        <AuthProvider>
         <ThemeProvider>
+        <ToastProvider />
         <header className="border-b border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900">
           <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-6">
             <div>
@@ -83,7 +91,7 @@ export default function RootLayout({
         <main>{children}</main>
 
         <footer className="fixed bottom-0 left-0 w-full z-50 bg-black py-3 px-6 text-gray-300">
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center justify-center gap-4 text-sm">
             <span className="font-bold text-white">바로가기</span>
             <a href="https://github.com/JAEWON9979" target="_blank" rel="noopener noreferrer" className="hover:text-white">
               GitHub 사이트 이동
@@ -95,6 +103,7 @@ export default function RootLayout({
           </div>
         </footer>
         </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
