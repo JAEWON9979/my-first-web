@@ -5,7 +5,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import SearchBar from "@/components/SearchBar";
 import { TabKey } from "@/lib/posts";
-import { usePosts } from "@/hooks/usePosts";
+import { useSupabasePosts } from "@/hooks/useSupabasePosts";
 
 type SortOrder = "newest" | "oldest";
 
@@ -50,7 +50,7 @@ function getInitialViewOptions(): ViewOptions {
 const initialViewOptions = getInitialViewOptions();
 
 export default function PostListContainer() {
-  const { searchedPosts, isLoading, error, searchQuery, setSearchQuery, deletePost } = usePosts(
+  const { posts, searchedPosts, isLoading, error, searchQuery, setSearchQuery, deletePost } = useSupabasePosts(
     initialViewOptions.searchQuery
   );
   const [selectedCategory, setSelectedCategory] = useState<TabKey>(initialViewOptions.selectedCategory);
@@ -91,14 +91,20 @@ export default function PostListContainer() {
     });
   }, [filteredPosts, sortOrder]);
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     const shouldDelete = window.confirm("정말 삭제하시겠습니까?");
     if (!shouldDelete) {
       return;
     }
 
-    deletePost(id);
-    toast.success("삭제되었습니다");
+    deletePost(id)
+      .then(() => {
+        toast.success("삭제되었습니다");
+      })
+      .catch((deleteError) => {
+        const message = deleteError instanceof Error ? deleteError.message : "삭제에 실패했습니다.";
+        toast.error(message);
+      });
   };
 
   return (
@@ -149,6 +155,10 @@ export default function PostListContainer() {
           <p className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300">
             {error}
           </p>
+        </div>
+      ) : posts.length === 0 ? (
+        <div className="flex min-h-[40vh] flex-1 items-center justify-center px-4 py-16 text-center">
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">아직 작성된 글이 없습니다.</p>
         </div>
       ) : sortedPosts.length > 0 ? (
         <ul className="grid grid-cols-1 gap-6 p-4 md:grid-cols-2 md:p-5">
