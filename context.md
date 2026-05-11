@@ -2,9 +2,9 @@
 
 ## 기준 정보
 - 워크스페이스: my-first-web
-- 최신 갱신일: 2026-04-29
+- 최신 갱신일: 2026-05-11
 - 스택: Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui
-- Supabase: Chapter 8에서 연동 예정
+- Supabase: Chapter 8 DB 연동 완료, Chapter 9 Auth 준비
 
 ## 현재 라우트 스냅샷
 - `/`: 홈
@@ -29,20 +29,28 @@
 - UI 프리미티브는 설치된 shadcn/ui 컴포넌트(button, card, input, dialog, textarea, label)를 우선 사용한다
 
 ## 데이터 모델 및 인증 현재 상태
-- 현재는 UI 뼈대만 존재한다
-- Chapter 8에서 Supabase Auth 및 DB 연동을 진행할 예정이다
-- `profiles` 테이블 예정: `id(uuid, PK)`, `email`, `name`, `role`, `created_at`
-- `posts` 테이블 예정: `id(uuid, PK)`, `title`, `content`, `category`, `author_id(profiles.id FK)`, `created_at`
-- 인증/CRUD는 아직 정적 상태이며 실제 데이터 연결 전 단계다
-
-## 최근 반영 사항 (Chapter 7 완료 기준)
+- **Chapter 8 완료**: Supabase DB 연동 (posts 테이블, 실제 insert/read)
+- **Chapter 9 준비**: Email/Password 인증 (로그인, 회원가입, 로그아웃)
+- `profiles` 테이블: `id(uuid, PK)`, `email`, `name`, `role`, `created_at`
+- `posts` 테이블: `id(uuid, PK)`, `title`, `content`, `category`, `user_id(profiles.id FK)`, `created_at`
+- **Ch9 새로 추가될 파일**:
+  - `lib/auth.ts`: signInWithEmail, signUpWithEmail, signOut 함수
+  - `contexts/AuthCon8 완료 기준)
+- Chapter 7 요구사항에 맞춘 4대 핵심 문서 세팅 완료
+- Supabase 프로젝트 연결 및 마이그레이션 완료(`20260504043926_create_tables.sql`)
+- `lib/supabase/client.ts` 생성 (createBrowserClient 기반)
+- `/posts` 목록을 Supabase 실제 데이터로 조회 구현
+- `/posts/new` 글 작성 페이지를 Supabase insert로 구현
+- Ch9 기준 문서 정비
 - Chapter 7 요구사항에 맞춘 4대 핵심 문서(ARCHITECTURE, context, todo, copilot-instructions) 세팅 완료
 - 필수 shadcn/ui(button, card, input, dialog, textarea, label) 설치 완료
 - 브라운 테마 및 디자인 토큰 적용 완료
-- App Router 기준의 주요 라우트와 인증 뼈대 생성 완료
-
-## 남은 리스크 및 다음 액션
-- 실제 DB가 연결되지 않아 현재는 정적 UI만 존재한다
+- ACh9 다음 액션
+- lib/auth.ts 생성: signInWithEmail, signUpWithEmail, signOut 구현
+- AuthProvider 또는 AuthContext 생성: 로그인 상태 전역 공유
+- /app/login, /app/signup 페이지 구현: 실제 인증 폼 연결
+- middleware.ts 생성: /posts/new, /posts/[id]/edit, /mypage 보호 라우트
+- header/navigation에서 로그인 상태에 따라 "로그인/회원가입" 또는 "로그아웃" 버튼 표시
 - 빠른 Supabase 연동이 필요하다
 - 다음 액션: Chapter 8 기준으로 Supabase 프로젝트 연결과 클라이언트 초기화를 진행한다
 

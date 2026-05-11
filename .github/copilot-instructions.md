@@ -7,7 +7,10 @@
 - TypeScript
 - shadcn/ui
 	- installed components: button, card, input, dialog, textarea, label
-- Supabase는 Chapter 8에서 연동 예정
+- Supabase 연동 (Chapter 8 완료: 데이터베이스, Chapter 9: 인증)
+	- @supabase/supabase-js: 2.47.12
+	- @supabase/ssr: 0.5.2
+	- 클라이언트: lib/supabase/client.ts의 createBrowserClient 사용
 
 ## Design Tokens
 - Primary Color: #8B6B4E
@@ -24,6 +27,8 @@
 - 새로운 UI가 필요하면 components/ui/ 안의 컴포넌트를 먼저 검토한다
 - 필요할 때만 커스텀 컴포넌트를 components/ 루트에 둔다
 - 페이지 뼈대는 가능한 한 Card와 기본 레이아웃으로 단순하게 구성한다
+- **기존 구조 유지:** 코드 변경 작업을 수행할 때는 현재 프로젝트의 파일 구조, 컴포넌트 설계 방식, 디자인 패턴을 항상 최대한 유지해야 합니다.
+- **구조 변경 시 사전 고지:** 만약 더 나은 방식이 있거나 불가피한 이유로 기존 구조(뼈대)를 변경해야 할 경우, 임의로 코드를 수정하지 말고 반드시 변경해야 하는 이유와 기대 효과를 먼저 설명하고, 사용자의 동의를 구한 뒤에 실행하십시오.
 
 ## Coding Conventions
 - 기본은 Server Component로 작성한다
@@ -31,7 +36,8 @@
 - 데이터 페칭 로직은 페이지 컴포넌트에 직접 섞지 말고 lib/ 또는 hooks/로 분리한다
 - App Router(app/ 폴더)만 사용한다
 - 라우트는 app/ 아래 파일 기반으로만 생성한다
-- 인증 라우트는 현재 뼈대 수준으로 유지하고, 실제 인증 로직은 Chapter 8 이후에 연결한다
+- 인증 로직은 lib/auth.ts에 집중하고, 화면 컴포넌트는 그 함수들만 호출하게 한다
+- 보호 라우트는 middleware.ts로 관리한다
 
 ## Project Structure
 - 홈: /
@@ -48,6 +54,8 @@
 - App Router 동적 라우트의 params는 await해서 사용한다
 - Tailwind 기본 색상(bg-blue-500, text-red-400 등)을 직접 남발하지 않는다
 - 디자인 토큰이 이미 정의되어 있으면 새 색상 체계를 임의로 추가하지 않는다
+- Supabase Auth: signInWithPassword, signUp, signOut만 사용한다. 구버전 auth.signIn()은 절대 사용하지 않는다
+- Supabase 인증: 클라이언트에 service_role 키를 절대 두지 않는다
 - 의미 없는 use client를 붙이지 않는다
 - 새로운 AI 실수를 발견하면 해당 패턴을 이 섹션에 즉시 추가하고, 이후 세션부터 동일 규칙을 자동 적용한다
 

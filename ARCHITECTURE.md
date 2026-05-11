@@ -1,32 +1,33 @@
 # 블로그 아키텍처 설계서 (my-first-web)
 
 ## 1. 문서 목적
-이 문서는 my-first-web 프로젝트의 설계 기준을 정의한다. Ch8~12에서 Supabase 연동, 인증, 마이페이지, CRUD 확장이 이어질 때 흔들리지 않도록 구조, 데이터, 권한, UI 원칙의 단일 기준을 제공한다.
+이 문서는 my-first-web 프로젝트의 설계 기준을 정의한다. Ch8(Supabase DB 완료), Ch9(Auth 진행 중), Ch10~12(권한/고급 기능)에서 구조, 데이터, 권한, UI 원칙의 단일 기준을 제공한다.
 
 ## 2. 시스템 개요
 - 제품 성격: 개인 블로그 및 포트폴리오 사이트
 - 포함 콘텐츠: 개발 일지, 스터디 기록, 프로젝트 소개, 포스트 CRUD
 - 라우팅 방식: Next.js 16.2.1 App Router 전용
+- 인증: Supabase Auth (이메일/비밀번호만, 소셜 로그인 X)
 - UI 스택: React 19.2.4, Tailwind CSS v4, shadcn/ui
 - 디자인 방향: 밝고 깔끔한 배경 위에 브라운 톤 primary를 사용하는 정돈된 개인 블로그 스타일
 - 메인 컨텐츠 폭: `max-w-4xl mx-auto`
-- Supabase: Chapter 8에서 데이터/인증 연동 예정
+- Supabase: Chapter 8 DB 완료, Chapter 9 Auth 진행 중
 
 ## 3. 페이지 맵 (URL 구조)
 | 경로 | 상태 | 목적 | 인증 요구사항 |
 | --- | --- | --- | --- |
 | `/` | 구현됨 | 홈 및 소개 진입점 | 없음 |
-| `/posts` | 구현됨 | 전체 글 목록 확인 | 없음 |
-| `/posts/new` | 구현됨 | 새 글 작성 화면 | 로그인 필요(예정 보호 경로) |
+| `/posts` | 구현됨 | 전체(Supabase insert) | 새 글 작성 화면 | 로그인 필요(middleware 보호) |
 | `/posts/[id]` | 구현됨 | 글 상세 확인 | 없음 |
-| `/posts/[id]/edit` | 구현됨 | 기존 글 수정 | 로그인 필요(예정 보호 경로) |
+| `/posts/[id]/edit` | 구현됨 | 기존 글 수정 | 로그인 필요(middleware 보호, 작성자만) |
 | `/development-log` | 구현됨 | 개발 일지 카테고리 | 없음 |
 | `/projects` | 구현됨 | 프로젝트 카테고리 | 없음 |
 | `/study-log` | 구현됨 | 스터디 기록 카테고리 | 없음 |
-| `/login` | 뼈대 구현 | 로그인 화면 진입 | 없음 |
-| `/signup` | 뼈대 구현 | 회원가입 화면 진입 | 없음 |
-| `/mypage` | 뼈대 구현 | 내 정보 및 본인 글 관리 | 로그인 필요(예정 보호 경로) |
+| `/login` | 준비 중 (Ch9) | 로그인 화면 진입 | Supabase Auth 연결 예정 |
+| `/signup` | 준비 중 (Ch9) | 회원가입 화면 진입 | Supabase Auth 연결 예정 |
+| `/mypage` | 뼈대 구현 | 내 정보 및 본인 글 관리 | 로그인 필요(middleware 보호) |
 
+보호 라우트 (middleware.ts
 보호 경로(예정): `/posts/new`, `/posts/[id]/edit`, `/mypage`
 
 ## 4. 컴포넌트 계층
@@ -34,9 +35,11 @@
 - `app/layout.tsx`
   - 전역 HTML 구조
   - 폰트 및 body 배경/텍스트 토큰 적용
+  - `AuthProvider` (Ch9에서 추가: 로그인 상태 전역 관리)
   - `ThemeProvider`
   - `ToastProvider`
   - 공통 헤더와 푸터
+  - 헤더에서 로그인 상태 분기: 비로그인 시 "로그인/회원가입", 로그인 시 "로그아웃" 버튼 표시
 - `max-w-4xl mx-auto` 컨테이너
   - 모든 주요 페이지의 공통 가로 폭 기준
   - 모바일에서는 `px-4`, 데스크톱에서는 `md:px-6` 계열의 여백 사용

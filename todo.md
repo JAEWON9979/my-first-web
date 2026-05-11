@@ -1,8 +1,8 @@
 # 프로젝트 체크리스트 (my-first-web)
 
 ## 전체 진행률
-- 진행률: 25%
-- 기준일: 2026-04-29
+- 진행률: 40% (Ch8 완료, Ch9 준비)
+- 기준일: 2026-05-11
 
 ## 1단계. 아키텍처 및 설계 기초 (Chapter 7 완료) - 100%
 - [x] 4대 핵심 문서(ARCHITECTURE, context, todo, copilot-instructions) 구축
@@ -11,23 +11,37 @@
 - [x] 필수 shadcn/ui 컴포넌트(button, card, input, dialog, textarea, label) 설치
 - 검증 메모: Chapter 7 범위의 설계 문서와 App Router 뼈대가 실제 프로젝트 상태에 맞게 정리됨.
 
-## 2단계. UI 고도화 및 와이어프레임 구현 - 0%
-- [ ] 주요 페이지(/posts, /development-log)에 shadcn/ui Card를 활용한 레이아웃 적용
-- [ ] 공통 메인 레이아웃(max-w-4xl) 세팅
-- [ ] 입력 폼 디자인 가이드 준수
-- 검증 메모: 현재는 뼈대와 설계가 우선 정리된 상태이며, 실제 UI 고도화는 다음 단계에서 진행 예정.
+## 2단계. Supabase 데이터베이스 및 클라이언트 (Chapter 8 완료) - 100%
+- [x] Supabase 프로젝트 연결
+- [x] 마이그레이션 파일(profiles, posts) 생성
+- [x] lib/supabase/client.ts 생성 (createBrowserClient)
+- [x] /posts 목록을 Supabase 조회로 변경
+- [x] /posts/new 글 작성을 Supabase insert로 구현
+- 검증 메모: 실제 데이터가 Supabase에 저장되고 조회되는 것을 확인함.
 
-## 3단계. 데이터베이스 및 Supabase 연동 (Chapter 8 대비) - 0%
-- [ ] users 테이블(id, email, name, role, created_at) 설계
-- [ ] posts 테이블(id, title, content, category, author_id, created_at) 설계
-- [ ] Supabase 프로젝트 연결 및 클라이언트 초기화
-- [ ] 실데이터 Fetch/CRUD 흐름 정리
+## 3단계. Supabase Authentication (Chapter 9) - 0%
+- [ ] Supabase CLI 연결 확인 및 Auth Provider 설정 확인
+- [ ] lib/auth.ts 생성 (signInWithEmail, signUpWithEmail, signOut)
+- [ ] AuthProvider 또는 AuthContext 생성 및 app/layout.tsx 연결
+- [ ] /app/login 페이지 구현 (이메일/비밀번호 로그인)
+- [ ] /app/signup 페이지 구현 (이메일/비밀번호 회원가입)
+- [ ] header에서 로그인 상태 표시 (로그인/회원가입 <-> 로그아웃)
+- [ ] middleware.ts 생성 (보호 라우트: /posts/new, /posts/[id]/edit, /mypage)
+- [ ] 시나리오 검증 (로그인 후 글쓰기, 로그아웃 후 /posts/new 접근 차단)
+- 검증 메모: 이메일/비밀번호 인증만 사용, 구버전 auth.signIn() 금지, 보호 라우트 middleware 기반
 
-## 4단계. 최종 점검 및 제출 준비 - 0%
-- [ ] 전체 라우트와 문서 정합성 점검
+## 4단계. 권한 및 고급 기능 (Chapter 10 이후) - 0%
+- [ ] RLS (Row-Level Security) 정책 설정
+- [ ] 본인 글만 수정/삭제 가능 권한 제어
+
+## 5단계. 최종 점검 및 배포 - 0%
+- [ ] npm run build 성공 확인
+- [ ] 브라우저에서 회원가입 → 로그인 → 글쓰기 → 로그아웃 전체 흐름 검증
 - [ ] 반응형 레이아웃 최종 확인
 - [ ] 제출 전 오탈자 및 링크 점검
 
-## 즉시 다음 액션 (우선순위)
-- `/posts`와 `/development-log` 페이지에 Card 기반 공통 레이아웃을 적용한다.
-- 공통 메인 레이아웃을 `max-w-4xl` 기준으로 정리한다.
+## 즉시 다음 액션 (Ch9 우선순위)
+1. 이 문서 + context.md, copilot-instructions.md, ARCHITECTURE.md 정비 완료
+2. Supabase CLI 연결 상태 확인 (`npx supabase projects list`)
+3. Supabase 대시보드에서 Auth Email Provider 및 URL Configuration 확인
+4. lib/auth.ts 파일 생성 및 테스트
