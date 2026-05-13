@@ -88,9 +88,23 @@ export async function signInWithEmail(
       };
     }
 
-    const {
-      data: { user: signedInUser },
-    } = await supabase.auth.getUser();
+    // 로그인 후 클라이언트에 세션이 쓰여질 때까지 확인합니다.
+    // 브라우저에서 쿠키로 세션을 동기화하는 과정이 비동기로 일어나면
+    // 즉시 리다이렉트 시 미인증으로 판단될 수 있으므로 안정성을 위해 짧게 폴링합니다.
+    let signedInUser = null as any;
+    for (let i = 0; i < 10; i++) {
+      const {
+        data: { user: u },
+      } = await supabase.auth.getUser();
+
+      if (u) {
+        signedInUser = u;
+        break;
+      }
+
+      // 짧게 대기
+      await new Promise((res) => setTimeout(res, 100));
+    }
 
     if (signedInUser) {
       const { error: profileError } = await syncProfile(signedInUser, signedInUser.email ?? trimmedEmail);
@@ -150,8 +164,26 @@ export async function signUpWithEmail(
       };
     }
 
-    if (data.user) {
-      const { error: profileError } = await syncProfile(data.user, trimmedEmail);
+    // 회원가입 후에도 세션/유저 정보가 브라우저에 반영되는 시점이 다를 수 있으므로
+    // 폴링으로 user 객체를 기다립니다.
+    let createdUser = data.user ?? null;
+    if (!createdUser) {
+      for (let i = 0; i < 10; i++) {
+        const {
+          data: { user: u },
+        } = await supabase.auth.getUser();
+
+        if (u) {
+          createdUser = u;
+          break;
+        }
+
+        await new Promise((res) => setTimeout(res, 100));
+      }
+    }
+
+    if (createdUser) {
+      const { error: profileError } = await syncProfile(createdUser, trimmedEmail);
 
       if (profileError) {
         return {
