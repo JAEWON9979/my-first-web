@@ -24,7 +24,8 @@ export default function LoginPage() {
 
     if ("success" in result) {
       toast.success("로그인되었습니다.");
-      router.push("/posts");
+      // 전체 페이지 네비게이션으로 변경: 세션 쿠키가 서버로 확실히 전달되도록 함
+      window.location.assign("/posts");
     } else {
       toast.error(result.message);
     }
