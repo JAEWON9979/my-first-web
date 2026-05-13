@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export type AuthError = {
   message: string;
@@ -14,6 +15,43 @@ export type AuthResponse = AuthSuccess | AuthError;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isAuthError(response: AuthResponse): response is AuthError {
   return "message" in response && !("success" in response);
+}
+
+/**
+ * Supabase 에러 메시지를 사용자 친화적인 한글로 번역한다.
+ * @param errorMessage Supabase에서 반환한 영어 에러 메시지
+ * @returns 번역된 한글 메시지
+ */
+function translateErrorMessage(errorMessage: string): string {
+  const errorMap: Record<string, string> = {
+    "email rate limit exceeded": "이메일 발송 제한을 초과했습니다. 잠시 후 다시 시도해 주세요.",
+    "Invalid login credentials": "이메일 또는 비밀번호가 올바르지 않습니다.",
+    "User already registered": "이미 가입된 이메일입니다.",
+    "Password should be at least 6 characters": "비밀번호는 최소 6자 이상이어야 합니다.",
+    "Email not confirmed": "이메일 인증이 필요합니다.",
+  };
+
+  // 정확한 매칭 확인
+  for (const [key, value] of Object.entries(errorMap)) {
+    if (errorMessage.includes(key)) {
+      return value;
+    }
+  }
+
+  // 매칭되지 않으면 기본 메시지 반환
+  return "오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+}
+
+async function syncProfile(user: User, username: string) {
+  const supabase = createClient();
+
+  return supabase.from("profiles").upsert(
+    {
+      id: user.id,
+      username,
+    },
+    { onConflict: "id" }
+  );
 }
 
 /**
@@ -43,10 +81,26 @@ export async function signInWithEmail(
     });
 
     if (error) {
+      const translatedMessage = translateErrorMessage(error.message);
       return {
-        message: error.message || "로그인에 실패했습니다.",
+        message: translatedMessage,
         code: error.code,
       };
+    }
+
+    const {
+      data: { user: signedInUser },
+    } = await supabase.auth.getUser();
+
+    if (signedInUser) {
+      const { error: profileError } = await syncProfile(signedInUser, signedInUser.email ?? trimmedEmail);
+
+      if (profileError) {
+        return {
+          message: profileError.message || "프로필 동기화에 실패했습니다.",
+          code: profileError.code,
+        };
+      }
     }
 
     return { success: true };
@@ -83,16 +137,28 @@ export async function signUpWithEmail(
     }
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: trimmedEmail,
       password: trimmedPassword,
     });
 
     if (error) {
+      const translatedMessage = translateErrorMessage(error.message);
       return {
-        message: error.message || "회원가입에 실패했습니다.",
+        message: translatedMessage,
         code: error.code,
       };
+    }
+
+    if (data.user) {
+      const { error: profileError } = await syncProfile(data.user, trimmedEmail);
+
+      if (profileError) {
+        return {
+          message: profileError.message || "프로필 저장에 실패했습니다.",
+          code: profileError.code,
+        };
+      }
     }
 
     return { success: true };
@@ -112,8 +178,9 @@ export async function signOut(): Promise<AuthResponse> {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
+      const translatedMessage = translateErrorMessage(error.message);
       return {
-        message: error.message || "로그아웃에 실패했습니다.",
+        message: translatedMessage,
         code: error.code,
       };
     }

@@ -1,5 +1,26 @@
 export type TabKey = "all" | "goal" | "study" | "project";
 
+export const categoryLabelMap: Record<Exclude<TabKey, "all">, string> = {
+  goal: "목표",
+  study: "수업일지",
+  project: "프로젝트",
+};
+
+export function getCategoryLabel(category: Exclude<TabKey, "all">) {
+  return categoryLabelMap[category];
+}
+
+export function formatAuthorName(
+  authorName: string | null | undefined,
+  fallbackId?: string | null,
+) {
+  if (authorName) {
+    return authorName.includes("@") ? authorName.split("@")[0] : authorName;
+  }
+
+  return fallbackId ? fallbackId.slice(0, 8) : "";
+}
+
 export type Post = {
   id: number;
   title: string;
@@ -20,11 +41,7 @@ export type ApiPost = {
 
 const categoryCycle: Array<Exclude<TabKey, "all">> = ["goal", "study", "project"];
 
-const tagByCategory: Record<Exclude<TabKey, "all">, string> = {
-  goal: "목표",
-  study: "수업일지",
-  project: "프로젝트",
-};
+const tagByCategory: Record<Exclude<TabKey, "all">, string> = categoryLabelMap;
 
 const authorPool = ["김재원", "이디자인", "박개발"];
 

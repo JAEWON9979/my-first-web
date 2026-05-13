@@ -1,32 +1,27 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { formatAuthorName, type TabKey } from "@/lib/posts";
 
 type ListPost = {
   id: string;
   title: string;
   content: string;
-  author: string;
-  date: string;
-  category: string;
-  summary: string;
-  tag: string;
+  created_at: string;
+  user_id: string;
+  category: Exclude<TabKey, "all">;
+  author_name: string;
 };
 
 type SupabasePostRow = {
   id: string;
   title: string;
   content: string;
-  category: string | null;
   created_at: string | null;
-};
-
-const tagByCategory: Record<string, string> = {
-  goal: "목표",
-  study: "수업일지",
-  project: "프로젝트",
-  general: "일반",
+  user_id: string;
+  category: Exclude<TabKey, "all"> | null;
+  profiles?: { username: string | null } | null;
 };
 
 function formatDate(value: string | null) {
@@ -38,25 +33,21 @@ function formatDate(value: string | null) {
 }
 
 function mapRowToPost(row: SupabasePostRow): ListPost {
-  const category = row.category ?? "general";
-
   return {
     id: row.id,
     title: row.title,
     content: row.content,
-    author: "작성자 미확인",
-    date: formatDate(row.created_at),
-    category,
-    summary: row.content.slice(0, 80),
-    tag: tagByCategory[category] ?? "일반",
+    created_at: formatDate(row.created_at),
+    user_id: row.user_id,
+    category: row.category ?? "goal",
+    author_name: formatAuthorName(row.profiles?.username, row.user_id),
   };
 }
 
-export function useSupabasePosts(initialSearchQuery = "") {
+export function useSupabasePosts() {
   const [posts, setPosts] = useState<ListPost[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -69,7 +60,7 @@ export function useSupabasePosts(initialSearchQuery = "") {
         const supabase = createClient();
         const { data, error: fetchError } = await supabase
           .from("posts")
-          .select("id, title, content, category, created_at")
+          .select("*, profiles(username)")
           .order("created_at", { ascending: false });
 
         if (controller.signal.aborted) {
@@ -102,38 +93,9 @@ export function useSupabasePosts(initialSearchQuery = "") {
     };
   }, []);
 
-  const searchedPosts = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return posts;
-    }
-
-    const lowerQuery = searchQuery.toLowerCase();
-
-    return posts.filter(
-      (post) =>
-        post.title.toLowerCase().includes(lowerQuery) ||
-        post.summary.toLowerCase().includes(lowerQuery)
-    );
-  }, [posts, searchQuery]);
-
-  const deletePost = async (id: string) => {
-    const supabase = createClient();
-    const { error: deleteError } = await supabase.from("posts").delete().eq("id", id);
-
-    if (deleteError) {
-      throw deleteError;
-    }
-
-    setPosts((currentPosts) => currentPosts.filter((post) => post.id !== id));
-  };
-
   return {
     posts,
-    searchedPosts,
     isLoading,
     error,
-    searchQuery,
-    setSearchQuery,
-    deletePost,
   };
 }

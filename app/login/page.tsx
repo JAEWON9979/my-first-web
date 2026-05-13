@@ -33,7 +33,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-4xl items-center justify-center px-4 py-12 md:px-6">
+    <main className="relative -top-[6px] mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-4xl items-center justify-center px-4 py-12 md:px-6">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>로그인</CardTitle>

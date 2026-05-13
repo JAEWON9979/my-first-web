@@ -1,67 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/SearchBar";
-import { TabKey } from "@/lib/posts";
 import { useSupabasePosts } from "@/hooks/useSupabasePosts";
+import { getCategoryLabel, TabKey } from "@/lib/posts";
 
 type SortOrder = "newest" | "oldest";
 
-type ViewOptions = {
-  selectedCategory: TabKey;
-  searchQuery: string;
-  sortOrder: SortOrder;
-};
-
-function getInitialViewOptions(): ViewOptions {
-  const defaults: ViewOptions = {
-    selectedCategory: "all",
-    searchQuery: "",
-    sortOrder: "newest",
-  };
-
-  if (typeof window === "undefined") {
-    return defaults;
-  }
-
-  try {
-    const saved = localStorage.getItem("postsViewOptions");
-    if (!saved) {
-      return defaults;
-    }
-
-    const parsed = JSON.parse(saved) as Partial<ViewOptions>;
-
-    return {
-      selectedCategory: parsed.selectedCategory ?? defaults.selectedCategory,
-      searchQuery: typeof parsed.searchQuery === "string" ? parsed.searchQuery : defaults.searchQuery,
-      sortOrder:
-        parsed.sortOrder === "newest" || parsed.sortOrder === "oldest"
-          ? parsed.sortOrder
-          : defaults.sortOrder,
-    };
-  } catch {
-    return defaults;
-  }
-}
-
-const initialViewOptions = getInitialViewOptions();
-
 export default function PostListContainer() {
-  const { posts, searchedPosts, isLoading, error, searchQuery, setSearchQuery, deletePost } = useSupabasePosts(
-    initialViewOptions.searchQuery
-  );
-  const [selectedCategory, setSelectedCategory] = useState<TabKey>(initialViewOptions.selectedCategory);
-  const [sortOrder, setSortOrder] = useState<SortOrder>(initialViewOptions.sortOrder);
+  const [selectedCategory, setSelectedCategory] = useState<TabKey>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
 
-  useEffect(() => {
-    localStorage.setItem(
-      "postsViewOptions",
-      JSON.stringify({ selectedCategory, searchQuery, sortOrder })
-    );
-  }, [selectedCategory, searchQuery, sortOrder]);
+  const { posts, isLoading, error } = useSupabasePosts();
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "all", label: "전체보기" },
@@ -71,63 +24,36 @@ export default function PostListContainer() {
   ];
 
   const filteredPosts = useMemo(() => {
-    return searchedPosts.filter((post) => {
-      const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
+    const lowerQuery = searchQuery.trim().toLowerCase();
 
-      return matchesCategory;
+    return posts.filter((post) => {
+      const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
+      const matchesSearch =
+        !lowerQuery ||
+        post.title.toLowerCase().includes(lowerQuery) ||
+        post.content.toLowerCase().includes(lowerQuery);
+
+      return matchesCategory && matchesSearch;
     });
-  }, [searchedPosts, selectedCategory]);
+  }, [posts, searchQuery, selectedCategory]);
 
   const sortedPosts = useMemo(() => {
     return [...filteredPosts].sort((a, b) => {
-      const aTime = new Date(a.date).getTime();
-      const bTime = new Date(b.date).getTime();
+      const aTime = new Date(a.created_at).getTime();
+      const bTime = new Date(b.created_at).getTime();
 
-      if (sortOrder === "oldest") {
-        return aTime - bTime;
-      }
-
-      return bTime - aTime;
+      return sortOrder === "oldest" ? aTime - bTime : bTime - aTime;
     });
   }, [filteredPosts, sortOrder]);
 
-  const handleDelete = (id: string) => {
-    const shouldDelete = window.confirm("정말 삭제하시겠습니까?");
-    if (!shouldDelete) {
-      return;
-    }
-
-    deletePost(id)
-      .then(() => {
-        toast.success("삭제되었습니다");
-      })
-      .catch((deleteError) => {
-        const message = deleteError instanceof Error ? deleteError.message : "삭제에 실패했습니다.";
-        toast.error(message);
-      });
-  };
-
   return (
     <section className="flex min-h-[68vh] flex-col border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800">
-      <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+      <div className="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <ul className="flex gap-0 text-sm">
-            {tabs.map((tab) => (
-              <li key={tab.key}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory(tab.key)}
-                  className={`px-4 py-3 font-medium border-b-2 transition ${
-                    selectedCategory === tab.key
-                      ? "text-emerald-700 font-bold border-b-2 border-emerald-700"
-                      : "text-slate-600 border-b-2 border-transparent hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div>
+            <p className="text-sm font-semibold text-emerald-700">Supabase Posts</p>
+            <h1 className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">블로그 목록</h1>
+          </div>
 
           <div className="flex items-center gap-2">
             <select
@@ -140,8 +66,32 @@ export default function PostListContainer() {
             </select>
 
             <SearchBar initialQuery={searchQuery} onSearch={setSearchQuery} />
+
+            <Link href="/posts/new">
+              <Button size="sm" className="h-8 bg-slate-900 px-3 text-white hover:bg-slate-800">
+                새 글 쓰기
+              </Button>
+            </Link>
           </div>
         </div>
+
+        <ul className="mt-4 flex flex-wrap gap-1 text-sm">
+          {tabs.map((tab) => (
+            <li key={tab.key}>
+              <button
+                type="button"
+                onClick={() => setSelectedCategory(tab.key)}
+                className={`rounded-md border px-3 py-1.5 font-medium transition ${
+                  selectedCategory === tab.key
+                    ? "border-emerald-700 bg-emerald-700 text-white"
+                    : "border-transparent text-slate-600 hover:border-slate-300 hover:bg-white dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                }`}
+              >
+                {tab.label}
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {isLoading ? (
@@ -156,41 +106,32 @@ export default function PostListContainer() {
             {error}
           </p>
         </div>
-      ) : posts.length === 0 ? (
+      ) : sortedPosts.length === 0 ? (
         <div className="flex min-h-[40vh] flex-1 items-center justify-center px-4 py-16 text-center">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">아직 작성된 글이 없습니다.</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">이 카테고리의 게시글이 없습니다.</p>
         </div>
-      ) : sortedPosts.length > 0 ? (
+      ) : (
         <ul className="grid grid-cols-1 gap-6 p-4 md:grid-cols-2 md:p-5">
           {sortedPosts.map((post) => (
             <li key={post.id}>
-              <article className="flex h-full flex-col gap-2 rounded-lg border border-slate-200 bg-white p-5 shadow transition hover:shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                <Link href={`/posts/${post.id}`}>
-                  <div className="mb-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold text-emerald-700">[{post.tag}]</span>
-                    <span>{post.date}</span>
+              <Link href={`/posts/${post.id}`} className="block h-full">
+                <article className="flex h-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-200 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-800">
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span className="font-semibold text-emerald-700">[{getCategoryLabel(post.category)}]</span>
+                    <span>{post.created_at}</span>
                   </div>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{post.title}</h2>
-                  <p className="mt-2 break-all line-clamp-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{post.summary}</p>
-                </Link>
-                <div className="mt-3 flex items-center justify-between text-xs">
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(post.id)}
-                    className="font-medium text-red-500 transition hover:text-red-700 hover:underline"
-                  >
-                    삭제
-                  </button>
-                  <span className="font-medium text-slate-500 dark:text-slate-400">작성자: {post.author}</span>
-                </div>
-              </article>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    작성자: {post.author_name}
+                  </p>
+                  <p className="line-clamp-3 break-all text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {post.content}
+                  </p>
+                </article>
+              </Link>
             </li>
           ))}
         </ul>
-      ) : (
-        <div className="flex flex-1 items-center justify-center px-4 py-16 text-center text-sm text-slate-500 dark:text-slate-400">
-          이 카테고리의 게시글이 없습니다.
-        </div>
       )}
     </section>
   );

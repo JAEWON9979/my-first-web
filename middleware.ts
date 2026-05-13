@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getSetCookie();
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
@@ -30,15 +30,10 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 로그인하지 않은 사용자를 /login으로 리다이렉트
   if (!user) {
-    const protectedRoutes = ["/posts/new", "/posts/", "/mypage"];
-    const isEditRoute = request.nextUrl.pathname.match(/^\/posts\/[^/]+\/edit$/);
+    const protectedRoutes = ["/posts/new", "/posts/[id]/edit", "/mypage"];
 
-    if (
-      protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route)) ||
-      isEditRoute
-    ) {
+    if (request.nextUrl.pathname === "/posts/new" || request.nextUrl.pathname.match(/^\/posts\/[^/]+\/edit$/) || request.nextUrl.pathname === "/mypage") {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
@@ -47,5 +42,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/posts/new", "/posts/:id/edit", "/mypage", "/posts/:id"],
+  matcher: ["/posts/new", "/posts/:id/edit", "/mypage"],
 };
