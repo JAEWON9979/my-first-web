@@ -104,7 +104,6 @@ export async function addGoalAction(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/goals");
     return { success: true, goal: data as Goal };
   } catch (error) {
     const message = error instanceof Error ? error.message : "오류가 발생했습니다.";
@@ -141,7 +140,6 @@ export async function updateGoalTitleAction(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/goals");
     return { success: true, goal: data as Goal };
   } catch (error) {
     const message = error instanceof Error ? error.message : "오류가 발생했습니다.";
@@ -172,7 +170,6 @@ export async function updateGoalCompletionAction(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/goals");
     return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "오류가 발생했습니다.";
@@ -199,7 +196,6 @@ export async function deleteGoalAction(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/goals");
     return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "오류가 발생했습니다.";
