@@ -14,38 +14,49 @@ export type Goal = {
   updated_at: string;
 };
 
+type GoalActionClient = {
+  supabase: ReturnType<typeof createServerClient>;
+  user: { id: string };
+};
+
+async function getGoalActionClient(): Promise<GoalActionClient> {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll().map(({ name, value }) => ({ name, value }));
+        },
+        setAll(
+          cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>
+        ) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options as never);
+          });
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  return { supabase, user };
+}
+
 /**
  * 모든 목표를 조회한다 (Server Action)
  */
 export async function getAllGoalsAction(): Promise<Goal[]> {
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(
-            cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>
-          ) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          },
-        },
-      }
-    );
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error("로그인이 필요합니다.");
-    }
+    const { supabase, user } = await getGoalActionClient();
 
     const { data, error } = await supabase
       .from("goals")
@@ -76,33 +87,7 @@ export async function addGoalAction(
       return { success: false, error: "목표 제목을 입력해주세요." };
     }
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(
-            cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>
-          ) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          },
-        },
-      }
-    );
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { success: false, error: "로그인이 필요합니다." };
-    }
+    const { supabase, user } = await getGoalActionClient();
 
     const { data, error } = await supabase
       .from("goals")
@@ -128,6 +113,43 @@ export async function addGoalAction(
 }
 
 /**
+ * 목표 제목을 수정한다 (Server Action)
+ */
+export async function updateGoalTitleAction(
+  goalId: string,
+  title: string
+): Promise<{ success: boolean; goal?: Goal; error?: string }> {
+  try {
+    if (!title.trim()) {
+      return { success: false, error: "목표 제목을 입력해주세요." };
+    }
+
+    const { supabase, user } = await getGoalActionClient();
+
+    const { data, error } = await supabase
+      .from("goals")
+      .update({
+        title: title.trim(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", goalId)
+      .eq("user_id", user.id)
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/goals");
+    return { success: true, goal: data as Goal };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "오류가 발생했습니다.";
+    return { success: false, error: message };
+  }
+}
+
+/**
  * 목표 완료 상태를 업데이트한다 (Server Action)
  */
 export async function updateGoalCompletionAction(
@@ -135,25 +157,7 @@ export async function updateGoalCompletionAction(
   isCompleted: boolean
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(
-            cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>
-          ) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          },
-        },
-      }
-    );
+    const { supabase, user } = await getGoalActionClient();
 
     const { error } = await supabase
       .from("goals")
@@ -161,7 +165,8 @@ export async function updateGoalCompletionAction(
         is_completed: isCompleted,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", goalId);
+      .eq("id", goalId)
+      .eq("user_id", user.id);
 
     if (error) {
       return { success: false, error: error.message };
@@ -182,27 +187,13 @@ export async function deleteGoalAction(
   goalId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(
-            cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>
-          ) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          },
-        },
-      }
-    );
+    const { supabase, user } = await getGoalActionClient();
 
-    const { error } = await supabase.from("goals").delete().eq("id", goalId);
+    const { error } = await supabase
+      .from("goals")
+      .delete()
+      .eq("id", goalId)
+      .eq("user_id", user.id);
 
     if (error) {
       return { success: false, error: error.message };

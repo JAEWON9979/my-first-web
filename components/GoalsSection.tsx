@@ -1,12 +1,18 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Check, Pencil, Trash2, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { Goal } from "@/app/actions/goals";
-import { updateGoalCompletionAction, addGoalAction } from "@/app/actions/goals";
+import {
+  addGoalAction,
+  deleteGoalAction,
+  updateGoalCompletionAction,
+  updateGoalTitleAction,
+} from "@/app/actions/goals";
 
 type GoalCategory = "year" | "month" | "week";
 
@@ -23,8 +29,14 @@ export function GoalsSection({
 }: GoalsSectionProps) {
   const [input, setInput] = useState("");
   const [displayedGoals, setDisplayedGoals] = useState<Goal[]>(goals);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  useEffect(() => {
+    setDisplayedGoals(goals);
+  }, [goals]);
 
   const handleToggleGoal = (goalId: string, isCompleted: boolean) => {
     // Optimistic UI 업데이트
@@ -42,6 +54,77 @@ export function GoalsSection({
         // 롤백: 원래 상태로 복원
         setDisplayedGoals(goals);
       }
+      try {
+        router.refresh();
+      } catch {
+        // ignore refresh errors
+      }
+    });
+  };
+
+  const handleStartEdit = (goal: Goal) => {
+    setEditingGoalId(goal.id);
+    setEditingTitle(goal.title);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingGoalId(null);
+    setEditingTitle("");
+  };
+
+  const handleSaveEdit = (goalId: string) => {
+    const nextTitle = editingTitle.trim();
+    if (!nextTitle) return;
+
+    const previousGoals = displayedGoals;
+    setDisplayedGoals((prev) =>
+      prev.map((goal) =>
+        goal.id === goalId
+          ? { ...goal, title: nextTitle, updated_at: new Date().toISOString() }
+          : goal
+      )
+    );
+    setEditingGoalId(null);
+    setEditingTitle("");
+
+    startTransition(async () => {
+      const result = await updateGoalTitleAction(goalId, nextTitle);
+      if (!result.success) {
+        console.error("목표 수정 실패:", result.error);
+        setDisplayedGoals(previousGoals);
+        return;
+      }
+
+      if (result.goal) {
+        setDisplayedGoals((prev) =>
+          prev.map((goal) => (goal.id === goalId ? result.goal! : goal))
+        );
+      }
+
+      try {
+        router.refresh();
+      } catch {
+        // ignore refresh errors
+      }
+    });
+  };
+
+  const handleDeleteGoal = (goalId: string) => {
+    if (!window.confirm("이 목표를 삭제할까요?")) {
+      return;
+    }
+
+    const previousGoals = displayedGoals;
+    setDisplayedGoals((prev) => prev.filter((goal) => goal.id !== goalId));
+
+    startTransition(async () => {
+      const result = await deleteGoalAction(goalId);
+      if (!result.success) {
+        console.error("목표 삭제 실패:", result.error);
+        setDisplayedGoals(previousGoals);
+        return;
+      }
+
       try {
         router.refresh();
       } catch {
@@ -115,15 +198,69 @@ export function GoalsSection({
                 disabled={isPending}
                 className="w-4 h-4 rounded border-slate-300 cursor-pointer disabled:opacity-50"
               />
-              <span
-                className={`text-sm transition-all ${
-                  goal.is_completed
-                    ? "line-through text-slate-400"
-                    : "text-slate-700"
-                }`}
-              >
-                {goal.title}
-              </span>
+              {editingGoalId === goal.id ? (
+                <div className="flex flex-1 items-center gap-2">
+                  <Input
+                    type="text"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    disabled={isPending}
+                    className="h-8 text-sm"
+                  />
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="secondary"
+                    disabled={isPending || !editingTitle.trim()}
+                    onClick={() => handleSaveEdit(goal.id)}
+                    aria-label="목표 수정 저장"
+                  >
+                    <Check />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    disabled={isPending}
+                    onClick={handleCancelEdit}
+                    aria-label="목표 수정 취소"
+                  >
+                    <X />
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <span
+                    className={`flex-1 text-sm transition-all ${
+                      goal.is_completed
+                        ? "line-through text-slate-400"
+                        : "text-slate-700"
+                    }`}
+                  >
+                    {goal.title}
+                  </span>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    disabled={isPending}
+                    onClick={() => handleStartEdit(goal)}
+                    aria-label="목표 수정"
+                  >
+                    <Pencil />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="destructive"
+                    disabled={isPending}
+                    onClick={() => handleDeleteGoal(goal.id)}
+                    aria-label="목표 삭제"
+                  >
+                    <Trash2 />
+                  </Button>
+                </>
+              )}
             </div>
           ))
         )}
