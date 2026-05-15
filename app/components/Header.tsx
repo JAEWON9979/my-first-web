@@ -55,6 +55,14 @@ export default function Header() {
                 블로그 목록
               </Link>
             </li>
+            <li>
+              <Link
+                href="/goals"
+                className="font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
+              >
+                목표
+              </Link>
+            </li>
             {user && (
               <li>
                 <Link

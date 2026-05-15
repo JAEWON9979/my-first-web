@@ -18,7 +18,7 @@ export default function PostListContainer() {
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "all", label: "전체보기" },
-    { key: "goal", label: "목표" },
+    { key: "goal", label: "커뮤니티" },
     { key: "study", label: "수업일지" },
     { key: "project", label: "프로젝트" },
   ];

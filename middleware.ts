@@ -17,9 +17,10 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, any> }>) {
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
+              // response.cookies.set expects a specific options shape; cast through unknown to avoid 'any'
+              response.cookies.set(name, value, options as unknown as Record<string, unknown>);
           });
         },
       },
@@ -31,9 +32,12 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const protectedRoutes = ["/posts/new", "/posts/[id]/edit", "/mypage"];
-
-    if (request.nextUrl.pathname === "/posts/new" || request.nextUrl.pathname.match(/^\/posts\/[^/]+\/edit$/) || request.nextUrl.pathname === "/mypage") {
+    if (
+      request.nextUrl.pathname === "/posts/new" ||
+      request.nextUrl.pathname.match(/^\/posts\/[^/]+\/edit$/) ||
+      request.nextUrl.pathname === "/mypage" ||
+      request.nextUrl.pathname === "/goals"
+    ) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
@@ -42,5 +46,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/posts/new", "/posts/:id/edit", "/mypage"],
+  matcher: ["/posts/new", "/posts/:id/edit", "/mypage", "/goals"],
 };

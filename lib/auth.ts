@@ -91,7 +91,7 @@ export async function signInWithEmail(
     // 로그인 후 클라이언트에 세션이 쓰여질 때까지 확인합니다.
     // 브라우저에서 쿠키로 세션을 동기화하는 과정이 비동기로 일어나면
     // 즉시 리다이렉트 시 미인증으로 판단될 수 있으므로 안정성을 위해 짧게 폴링합니다.
-    let signedInUser = null as any;
+    let signedInUser: User | null = null;
     for (let i = 0; i < 10; i++) {
       const {
         data: { user: u },

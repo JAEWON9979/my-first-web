@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import PostDetailActions from "@/components/PostDetailActions";
+import AuthorProfile from "@/components/AuthorProfile";
 import { formatAuthorName, getCategoryLabel } from "@/lib/posts";
 
 type Props = {
@@ -44,6 +45,11 @@ export default async function PostDetailPage({ params }: Props) {
             작성자: {formatAuthorName(post.profiles?.username, post.user_id)}
           </p>
         </div>
+
+        <AuthorProfile
+          authorName={formatAuthorName(post.profiles?.username, post.user_id)}
+          userId={post.user_id}
+        />
 
         <div className="prose prose-slate mt-8 max-w-none leading-8 dark:prose-invert prose-headings:text-slate-900 prose-p:text-slate-700 dark:prose-headings:text-slate-100 dark:prose-p:text-slate-300">
           {post.content.split("\n\n").map((paragraph: string) => (

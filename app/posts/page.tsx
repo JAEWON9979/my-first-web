@@ -1,4 +1,5 @@
 import PostListContainer from "@/components/PostListContainer";
+import CategoryStats from "@/components/CategoryStats";
 
 export default function PostsPage() {
 
@@ -18,6 +19,8 @@ export default function PostsPage() {
             <p>취미: 게임, 독서, 음악듣기</p>
           </div>
         </section>
+
+        <CategoryStats />
       </aside>
     </div>
   );

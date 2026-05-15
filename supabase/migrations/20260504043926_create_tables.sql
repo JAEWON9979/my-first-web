@@ -16,3 +16,14 @@ create table posts (
   content text not null,
   created_at timestamptz default now()
 );
+
+-- goals: 목표 관리 테이블
+create table goals (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references profiles(id) on delete cascade not null,
+  category text not null check (category in ('year', 'month', 'week')),
+  title text not null,
+  is_completed boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);

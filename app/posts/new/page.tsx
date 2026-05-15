@@ -124,7 +124,7 @@ export default function NewPostPage() {
               disabled={isSubmitting || isLoading}
               className="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             >
-              <option value="goal">목표</option>
+              <option value="goal">커뮤니티</option>
               <option value="study">수업일지</option>
               <option value="project">프로젝트</option>
             </select>

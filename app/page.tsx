@@ -10,8 +10,7 @@ export default function Home() {
             안녕하세요, 김재원입니다.
           </h2>
           <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-300">
-            웹 개발을 공부하며 배운 내용과 일상, 그리고 앞으로의 목표를 기록하는 개인 블로그입니다.
-            꾸준히 성장하는 개발자가 되기 위해 노력하고 있습니다.
+            웹프로그래밍 과목을 수강하며, Copilot chat을 통해 바이브 코딩을 공부하고 있습니다.<br/> 본 홈페이지는 수업의 과정이자 앞으로 수정해나갈 구현의 결과물입니다.
           </p>
         </div>
 

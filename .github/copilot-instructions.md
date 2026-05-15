@@ -59,6 +59,22 @@
 - 의미 없는 use client를 붙이지 않는다
 - 새로운 AI 실수를 발견하면 해당 패턴을 이 섹션에 즉시 추가하고, 이후 세션부터 동일 규칙을 자동 적용한다
 
+- Cookies/쿠키 처리 관련: `setAll` 같은 쿠키 집합을 처리하는 콜백의 파라미터는 암시적 `any`를 허용하지 않습니다. 아래 예시처럼 명시적 타입을 항상 지정하세요. 주로 `middleware.ts`와 Server Action(`app/actions/*.ts`)에서 필요합니다.
+
+```ts
+// 권장 타입 표기 예시
+setAll(
+	cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>
+) {
+	cookiesToSet.forEach(({ name, value, options }) => {
+		// NextResponse.cookies.set 또는 cookieStore.set에 전달
+		response.cookies.set(name, value, options as unknown as Record<string, unknown>);
+	});
+}
+```
+
+이 규칙을 따르면 Vercel/Next.js 빌드에서 발생하는 `Parameter 'cookiesToSet' implicitly has an 'any' type` 에러를 예방할 수 있습니다.
+
 ## Change Logging
 - 코드, 설정, 문서를 수정하면 docs/change-history.md도 함께 갱신한다
 - 한 번의 작업 묶음은 하나의 변경 로그로 정리한다
