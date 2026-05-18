@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 

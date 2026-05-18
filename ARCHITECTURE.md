@@ -1,7 +1,7 @@
 # 블로그 아키텍처 설계서 (my-first-web)
 
 ## 1. 문서 목적
-이 문서는 my-first-web 프로젝트의 설계 기준을 정의한다. Ch8(Supabase DB 완료), Ch9(Auth 완료), Ch10(게시글 CRUD 완료), Ch11~12(RLS/고급 기능)에서 구조, 데이터, 권한, UI 원칙의 단일 기준을 제공한다.
+이 문서는 my-first-web 프로젝트의 설계 기준을 정의한다. Ch8(Supabase DB 완료), Ch9(Auth 완료), Ch10(게시글 CRUD 완료), Ch11(RLS 적용 완료)에서 구조, 데이터, 권한, UI 원칙의 단일 기준을 제공한다.
 
 ## 2. 시스템 개요
 - 제품 성격: 개인 블로그 및 포트폴리오 사이트
@@ -11,13 +11,17 @@
 - UI 스택: React 19.2.4, Tailwind CSS v4, shadcn/ui
 - 디자인 방향: 밝고 깔끔한 배경 위에 브라운 톤 primary를 사용하는 정돈된 개인 블로그 스타일
 - 메인 컨텐츠 폭: `max-w-4xl mx-auto`
-- Supabase: Chapter 8 DB 완료, Chapter 9 Auth 완료, Chapter 10 CRUD 완료
+- Supabase: Chapter 8 DB 완료, Chapter 9 Auth 완료, Chapter 10 CRUD 완료, Chapter 11 RLS 적용 완료
 
 ## 2-1. 개발 규칙
 - 라우팅은 Next.js App Router만 사용한다.
 - `next/router`는 사용하지 않는다.
 - Supabase 클라이언트는 Ch8 기준 `lib/supabase/client.ts`를 사용한다.
 - 데이터 컬럼명은 스키마를 그대로 따른다. 임의 변경 금지.
+- RLS는 SQL Editor 직접 실행이 아니라 Supabase CLI 마이그레이션으로만 추가한다.
+- UI의 작성자 일치 분기는 보안이 아니며, 실제 보안은 RLS가 담당한다.
+- `posts` 권한은 `user_id = auth.uid()` 기준으로 설계한다.
+- `service_role` 키는 클라이언트에서 절대 사용하지 않는다.
 
 ## 3. 페이지 맵 (URL 구조)
 | 경로 | 상태 | 목적 | 인증 요구사항 |
@@ -116,6 +120,19 @@
 | 로그인 | `/login` | 없음 | 인증 진입점 |
 | 회원가입 | `/signup` | 없음 | 계정 생성 진입점 |
 | 마이페이지 | `/mypage` | 필요(예정) | 본인 정보 및 본인 글 관리 |
+
+### 6-1. Ch11 RLS 대상
+- 대상 테이블: `posts`
+- 정책 기준: `posts.user_id = auth.uid()`
+- 적용 범위: SELECT, INSERT, UPDATE, DELETE
+- 보안 책임 분리: UI의 작성자 일치 분기는 사용자 경험용이며, 실제 권한 강제는 DB RLS가 담당한다.
+- 정책 구현 위치: `supabase/migrations/20260518042936_posts_rls_policy.sql`
+- 정책 요약
+  - SELECT: 공개 읽기 허용
+  - INSERT: 로그인 사용자만, `WITH CHECK (user_id = auth.uid())`
+  - UPDATE: 작성자만, `USING`과 `WITH CHECK`를 모두 `user_id = auth.uid()`로 강제
+  - DELETE: 작성자만, `USING (user_id = auth.uid())`
+- 목적: UI 분기와 무관하게 본인 글만 수정/삭제 가능하도록 DB에서 강제
 
 ## 7. 문서 단일 기준 (Source of Truth)
 - `ARCHITECTURE.md`: 설계 기준

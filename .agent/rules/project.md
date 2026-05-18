@@ -5,7 +5,7 @@
 - **Type**: Personal Blog & Portfolio with Supabase
 - **Framework**: Next.js 16.2.1 (App Router ONLY)
 - **Auth**: Supabase (Email/Password only, no social login)
-- **Status**: Ch8 Database complete, Ch9 Authentication in progress
+- **Status**: Ch8 Database complete, Ch9 Authentication complete, Ch10 CRUD complete, Ch11 RLS pending
 
 ## Fixed Stack Versions (Teaching Material Basis)
 - **Next.js**: 16.2.1 (App Router mandatory)
@@ -31,6 +31,12 @@
 - **Auth Methods**: signInWithPassword, signUp, signOut ONLY
 - **Forbidden**: auth.signIn() (outdated), service_role key on client
 - **Environment**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+### Ch11 RLS
+- **Execution**: Add via Supabase CLI migration only, not SQL Editor
+- **Target**: `posts` table
+- **Policy Basis**: `user_id = auth.uid()`
+- **Security Rule**: UI visibility is not security; RLS is the actual enforcement layer
 
 ### Component Rules
 - **Default**: Server Components
@@ -63,6 +69,12 @@
 - `/posts/new` — Login required
 - `/posts/[id]/edit` — Login required (author only)
 - `/mypage` — Login required (user only)
+
+## RLS Targets (Ch11)
+- `posts` SELECT
+- `posts` INSERT
+- `posts` UPDATE
+- `posts` DELETE
 
 ## Absolute Prohibitions
 - ❌ Do NOT use pages/ router

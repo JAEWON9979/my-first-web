@@ -124,6 +124,9 @@ export default function PostListContainer() {
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     작성자: {post.author_name}
                   </p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    조회수 {post.view_count} · 좋아요 {post.like_count}
+                  </p>
                   <p className="line-clamp-3 break-all text-sm leading-6 text-slate-600 dark:text-slate-300">
                     {post.content}
                   </p>

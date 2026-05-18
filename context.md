@@ -2,9 +2,9 @@
 
 ## 기준 정보
 - 워크스페이스: my-first-web
-- 최신 갱신일: 2026-05-13
+- 최신 갱신일: 2026-05-18
 - 스택: Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui
-- Supabase: Chapter 8 DB 연동 완료, Chapter 9 Auth 적용, Chapter 10 게시글 CRUD 완료
+- Supabase: Chapter 8 DB 연동 완료, Chapter 9 Auth 적용, Chapter 10 게시글 CRUD 완료, Chapter 11 RLS 적용 완료
 
 ## 현재 라우트 스냅샷
 - `/`: 홈
@@ -46,9 +46,22 @@
   - 수정: `createClient().from("posts").update({ title, content, category }).eq("id", post.id)`
   - 삭제: `createClient().from("posts").delete().eq("id", post.id)`
 - 인증 상태: `contexts/AuthContext.tsx`의 `useAuth()`로 전역 공유
-- 작성/수정/삭제 액션은 `user.id === post.user_id`일 때만 UI에 표시되며, 실제 보안은 Ch11 RLS로 분리 예정
+- 작성/수정/삭제 액션은 `user.id === post.user_id`일 때만 UI에 표시되며, 이는 보안이 아니라 UI 분기다
+- 실제 보안은 Ch11 RLS가 담당하며, `posts.user_id = auth.uid()` 기준 정책으로 분리한다
 - `lib/posts.ts`에 `formatAuthorName()`을 두어 목록/상세 작성자 표시를 통일했다.
 - `lib/auth.ts`는 로그인/회원가입 시 `profiles`를 동기화해 `username`이 채워지도록 보강했다.
+
+## Ch11 상태 메모
+- RLS 마이그레이션이 추가되었고 `supabase/migrations/20260518042936_posts_rls_policy.sql`에 기록되어 있다.
+- `posts` 테이블은 `ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;`로 활성화되었다.
+- 적용 정책 요약:
+  - SELECT: `USING (true)`로 공개 읽기 허용
+  - INSERT: `WITH CHECK (user_id = auth.uid())`
+  - UPDATE: `USING (user_id = auth.uid())` 및 `WITH CHECK (user_id = auth.uid())`
+  - DELETE: `USING (user_id = auth.uid())`
+- Ch11 작업은 SQL Editor 직접 실행이 아니라 Supabase CLI 마이그레이션으로 남긴다.
+- 실제 DB 반영은 `supabase db push` 성공으로 확인되었다.
+- `service_role` 키는 클라이언트에서 사용하지 않는다.
 
 ## 최근 완료 사항
 - Chapter 7 요구사항에 맞춘 4대 핵심 문서 세팅 완료
@@ -63,6 +76,7 @@
 - 작성자 표시를 `profiles.username` 기반으로 통일하고 `formatAuthorName()` 헬퍼 추가
 - 로그인/회원가입 직후 `profiles` 동기화 보강
 - `npm run build` 최종 통과 확인
+- RLS 마이그레이션 생성 및 `supabase db push` 완료 확인
 
 ## Ch10 다음 확인 포인트
 - 상세 페이지의 수정/삭제 액션은 UI 제어 수준이며, 실제 권한 보안은 Ch11 RLS에서 적용

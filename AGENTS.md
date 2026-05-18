@@ -4,7 +4,7 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Ch7~Ch9 Shared Agent Rules
+# Ch7~Ch11 Shared Agent Rules
 
 ## Version & Stack (교재 기준 고정)
 
@@ -38,3 +38,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 구버전 auth.signIn() 절대 금지
 - 보호 라우트: middleware.ts 기반
 - 파일: lib/auth.ts, AuthProvider, /login, /signup, middleware.ts
+
+## Ch11 기준 (Supabase RLS)
+- 보안 강제는 항상 RLS가 담당한다. UI 버튼 숨김이나 화면 분기는 사용자 경험일 뿐 보안 근거로 삼지 않는다.
+- RLS는 SQL Editor 직접 실행이 아니라 Supabase CLI 마이그레이션 파일로만 남긴다.
+- `posts` RLS 적용 여부와 정책 내용은 문서와 마이그레이션 파일 경로를 함께 기록한다.
+- 대상 테이블은 `posts`이며, `user_id = auth.uid()` 기준으로 정책을 만든다.
+- UI 분기는 보안이 아니며, 실제 보안은 RLS가 담당한다.
+- `service_role` 키는 클라이언트에서 절대 사용하지 않는다
+- SELECT, INSERT, UPDATE, DELETE 정책을 각각 명시적으로 검토한다

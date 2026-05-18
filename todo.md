@@ -1,8 +1,8 @@
 # 프로젝트 체크리스트 (my-first-web)
 
 ## 전체 진행률
-- 진행률: 67% (Ch8, Ch9, Ch10 완료)
-- 기준일: 2026-05-13
+- 진행률: 85% (Ch8~Ch11 핵심 완료, 최종 검수만 남음)
+- 기준일: 2026-05-18
 
 ## 1단계. 아키텍처 및 설계 기초 (Chapter 7 완료) - 100%
 - [x] 4대 핵심 문서(ARCHITECTURE, context, todo, copilot-instructions) 구축
@@ -48,21 +48,26 @@
 - 메인 목록의 localStorage 기반 상태 저장과 JSONPlaceholder local hook을 제거함
 - `npm run build` 성공 확인 완료
 
-## 5단계. 권한 및 고급 기능 (Chapter 11 이후) - 0%
-- [ ] RLS (Row-Level Security) 정책 설정
-- [ ] 본인 글만 수정/삭제 가능 권한 제어
+## 5단계. 권한 및 고급 기능 (Chapter 11 이후) - 100%
+- [x] Supabase CLI 마이그레이션으로 posts RLS 정책 추가
+- [x] posts.user_id = auth.uid() 기준으로 SELECT / INSERT / UPDATE / DELETE 정책 정리
+- [x] 본인 글만 수정/삭제 가능 권한을 DB 레벨에서 강제
+- [x] 클라이언트 UI 분기는 보안이 아니라는 점을 문서와 코드 주석에 일치시킴
 
-## 6단계. 최종 점검 및 배포 - 0%
+## 6단계. 최종 점검 및 배포 - 60%
 - [x] npm run build 성공 확인
+- [x] Supabase db push로 RLS 마이그레이션 반영 확인
+- [x] 민감 키 유출 검사(git grep) 결과 출력 없음
 - [ ] 브라우저에서 회원가입 → 로그인 → 글쓰기 → 로그아웃 전체 흐름 검증
 - [ ] 반응형 레이아웃 최종 확인
 - [ ] 제출 전 오탈자 및 링크 점검
 
 추가 메모:
 - Next 16의 `middleware` deprecation 경고는 남아 있으나 빌드 자체는 성공
+- Ch11 RLS 정책과 마이그레이션 반영은 완료되었고, 남은 작업은 최종 사용성 검수다.
 
 ## 즉시 다음 액션 (Ch11 우선순위)
-1. RLS 정책 문서화 및 적용 검토
-2. 본인 글만 수정/삭제 가능하도록 서버 정책 정리
-3. CRUD 최종 사용자 시나리오 재검증
+1. 브라우저에서 회원가입 → 로그인 → 글쓰기 → 로그아웃 전체 흐름 검증
+2. 반응형 레이아웃 최종 확인
+3. 제출 전 오탈자 및 링크 점검
 4. 필요 시 `middleware`를 `proxy`로 전환 검토
