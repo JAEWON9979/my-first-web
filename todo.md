@@ -1,8 +1,8 @@
 # 프로젝트 체크리스트 (my-first-web)
 
 ## 전체 진행률
-- 진행률: 85% (Ch8~Ch11 핵심 완료, 최종 검수만 남음)
-- 기준일: 2026-05-18
+- 진행률: 100% (Ch8~Ch12 모두 완료)
+- 기준일: 2026-05-20
 
 ## 1단계. 아키텍처 및 설계 기초 (Chapter 7 완료) - 100%
 - [x] 4대 핵심 문서(ARCHITECTURE, context, todo, copilot-instructions) 구축
@@ -66,8 +66,17 @@
 - Next 16의 `middleware` deprecation 경고는 남아 있으나 빌드 자체는 성공
 - Ch11 RLS 정책과 마이그레이션 반영은 완료되었고, 남은 작업은 최종 사용성 검수다.
 
-## 즉시 다음 액션 (Ch11 우선순위)
-1. 브라우저에서 회원가입 → 로그인 → 글쓰기 → 로그아웃 전체 흐름 검증
-2. 반응형 레이아웃 최종 확인
-3. 제출 전 오탈자 및 링크 점검
-4. 필요 시 `middleware`를 `proxy`로 전환 검토
+## 7단계. Ch12 에러 처리와 UX 개선 - 100%
+- [x] `app/error.tsx` 글로벌 에러 경계 구현 (use client 포함)
+- [x] `app/loading.tsx`, `app/posts/loading.tsx`, `app/posts/[id]/loading.tsx` 로딩 skeleton UI 구현
+- [x] `lib/errors.ts` getFriendlyErrorMessage 유틸 함수 구현 (Supabase/네트워크 에러 변환)
+- [x] `/posts/new`, `/posts/[id]` (수정/삭제), `/posts` 목록에 getFriendlyErrorMessage 적용
+- [x] 폼 검증: 필수 입력 + 최소 길이 체크, 입력 변경 시 에러/메시지 자동 제거
+- [x] 버튼 비활성화로 중복 제출 방지
+- [x] npm run build 성공, 보안 키 유출 검사 통과, 구버전 API 미사용 확인
+
+## 📌 프로젝트 완료 상태
+모든 장(Ch8~Ch12)이 완료되었습니다. 프로젝트는 다음 단계로 진행할 준비가 되어 있습니다:
+- **배포 고려사항**: Vercel 배포, 환경변수 설정, Supabase 본격 운영 설정
+- **추가 기능 아이디어**: 댓글, 좋아요, 이미지 업로드, 마크다운 에디터 고도화 등
+- **성능 최적화**: 이미지 최적화, ISR 캐싱, API 라우트 추가 등

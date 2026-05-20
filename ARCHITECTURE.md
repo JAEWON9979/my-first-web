@@ -1,7 +1,7 @@
 # 블로그 아키텍처 설계서 (my-first-web)
 
 ## 1. 문서 목적
-이 문서는 my-first-web 프로젝트의 설계 기준을 정의한다. Ch8(Supabase DB 완료), Ch9(Auth 완료), Ch10(게시글 CRUD 완료), Ch11(RLS 적용 완료)에서 구조, 데이터, 권한, UI 원칙의 단일 기준을 제공한다.
+이 문서는 my-first-web 프로젝트의 설계 기준을 정의한다. Ch8(Supabase DB 완료), Ch9(Auth 완료), Ch10(게시글 CRUD 완료), Ch11(RLS 적용 완료), Ch12(에러 처리와 UX 개선 준비)에서 구조, 데이터, 권한, UI 원칙의 단일 기준을 제공한다.
 
 ## 2. 시스템 개요
 - 제품 성격: 개인 블로그 및 포트폴리오 사이트
@@ -11,7 +11,7 @@
 - UI 스택: React 19.2.4, Tailwind CSS v4, shadcn/ui
 - 디자인 방향: 밝고 깔끔한 배경 위에 브라운 톤 primary를 사용하는 정돈된 개인 블로그 스타일
 - 메인 컨텐츠 폭: `max-w-4xl mx-auto`
-- Supabase: Chapter 8 DB 완료, Chapter 9 Auth 완료, Chapter 10 CRUD 완료, Chapter 11 RLS 적용 완료
+- Supabase: Chapter 8 DB 완료, Chapter 9 Auth 완료, Chapter 10 CRUD 완료, Chapter 11 RLS 적용 완료, Chapter 12 에러 처리와 UX 개선 완료
 
 ## 2-1. 개발 규칙
 - 라우팅은 Next.js App Router만 사용한다.
@@ -140,3 +140,10 @@
 - `todo.md`: 진행 체크
 - `copilot-instructions.md`: AI 지침
 - 문서와 코드가 불일치하면 문서를 먼저 갱신한다.
+
+## 8. Ch12 준비 범위
+- Ch12의 핵심은 로딩/빈 상태/에러 UI와 폼 검증 보강이다.
+- 기존 CRUD 로직과 페이지 구조는 유지하고, 실패 케이스에 대한 화면 상태만 정리한다.
+- 우선 대상 화면은 `/posts`, `/posts/[id]`, `/posts/new`, `/login`, `/signup`이다.
+- 상태 분류는 loading, empty, error, auth/session expired, permission denied(RLS), validation으로 통일한다.
+- 사용자 메시지와 개발자 로그는 분리해서 기록한다.

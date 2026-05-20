@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getFriendlyErrorMessage } from "@/lib/errors";
 import { formatAuthorName, type TabKey } from "@/lib/posts";
 
 type ListPost = {
@@ -114,13 +115,7 @@ export function useSupabasePosts() {
           return;
         }
 
-        const message =
-          fetchError instanceof Error
-            ? fetchError.message
-            : typeof fetchError === "object" && fetchError && "message" in fetchError
-              ? String((fetchError as { message?: unknown }).message ?? "알 수 없는 오류가 발생했습니다.")
-              : "알 수 없는 오류가 발생했습니다.";
-        setError(message);
+        setError(getFriendlyErrorMessage(fetchError));
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false);

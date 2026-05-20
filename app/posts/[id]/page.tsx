@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import PostDetailActions from "@/components/PostDetailActions";
 import PostEngagementSection from "@/components/PostEngagementSection";
+import { getFriendlyErrorMessage } from "@/lib/errors";
 import { formatAuthorName, getCategoryLabel } from "@/lib/posts";
 
 type Props = {
@@ -36,11 +37,11 @@ export default async function PostDetailPage({ params }: Props) {
   }
 
   if (likeCountError) {
-    throw new Error(likeCountError.message);
+    throw new Error(getFriendlyErrorMessage(likeCountError));
   }
 
   if (commentsError) {
-    throw new Error(commentsError.message);
+    throw new Error(getFriendlyErrorMessage(commentsError));
   }
 
   const initialComments = (comments ?? []).map((comment) => {

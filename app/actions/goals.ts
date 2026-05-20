@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getFriendlyErrorMessage } from "@/lib/errors";
 
 export type Goal = {
   id: string;
@@ -64,7 +65,7 @@ export async function getAllGoalsAction(): Promise<Goal[]> {
       .order("created_at", { ascending: false });
 
     if (error) {
-      throw new Error(error.message);
+      throw new Error(getFriendlyErrorMessage(error));
     }
 
     return (data as Goal[]) || [];
@@ -100,13 +101,12 @@ export async function addGoalAction(
       .single();
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: getFriendlyErrorMessage(error) };
     }
 
     return { success: true, goal: data as Goal };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "오류가 발생했습니다.";
-    return { success: false, error: message };
+    return { success: false, error: getFriendlyErrorMessage(error) };
   }
 }
 
@@ -136,13 +136,12 @@ export async function updateGoalTitleAction(
       .single();
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: getFriendlyErrorMessage(error) };
     }
 
     return { success: true, goal: data as Goal };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "오류가 발생했습니다.";
-    return { success: false, error: message };
+    return { success: false, error: getFriendlyErrorMessage(error) };
   }
 }
 
@@ -166,13 +165,12 @@ export async function updateGoalCompletionAction(
       .eq("user_id", user.id);
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: getFriendlyErrorMessage(error) };
     }
 
     return { success: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "오류가 발생했습니다.";
-    return { success: false, error: message };
+    return { success: false, error: getFriendlyErrorMessage(error) };
   }
 }
 

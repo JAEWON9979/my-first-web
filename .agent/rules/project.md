@@ -5,7 +5,7 @@
 - **Type**: Personal Blog & Portfolio with Supabase
 - **Framework**: Next.js 16.2.1 (App Router ONLY)
 - **Auth**: Supabase (Email/Password only, no social login)
-- **Status**: Ch8 Database complete, Ch9 Authentication complete, Ch10 CRUD complete, Ch11 RLS pending
+- **Status**: Ch8 Database complete, Ch9 Authentication complete, Ch10 CRUD complete, Ch11 RLS complete, Ch12 UX prep
 
 ## Fixed Stack Versions (Teaching Material Basis)
 - **Next.js**: 16.2.1 (App Router mandatory)
@@ -37,6 +37,13 @@
 - **Target**: `posts` table
 - **Policy Basis**: `user_id = auth.uid()`
 - **Security Rule**: UI visibility is not security; RLS is the actual enforcement layer
+
+### Ch12 UX Prep
+- **Focus**: Add loading, empty, error, auth/session expired, permission denied(RLS), and validation states
+- **Constraint**: Preserve existing CRUD behavior, file structure, and current Tailwind styling as much as possible
+- **UI Rule**: Do not force a full shadcn/ui migration; enhance only the affected surfaces
+- **Scope**: `/posts`, `/posts/[id]`, `/posts/new`, `/login`, `/signup`
+- **Messaging**: Keep user-facing messages and developer logs separate
 
 ### Component Rules
 - **Default**: Server Components

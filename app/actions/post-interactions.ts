@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { getFriendlyErrorMessage } from "@/lib/errors";
 
 const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -153,7 +154,7 @@ export async function recordPostViewAction(postId: string): Promise<ActionResult
     });
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: getFriendlyErrorMessage(error) };
     }
 
     revalidatePath("/posts");
@@ -181,7 +182,7 @@ export async function toggleLikeAction(postId: string): Promise<ActionResult<Lik
       .maybeSingle();
 
     if (readLikeError) {
-      return { success: false, error: readLikeError.message };
+      return { success: false, error: getFriendlyErrorMessage(readLikeError) };
     }
 
     let liked = false;
@@ -194,7 +195,7 @@ export async function toggleLikeAction(postId: string): Promise<ActionResult<Lik
         .eq("user_id", user.id);
 
       if (deleteError) {
-        return { success: false, error: deleteError.message };
+        return { success: false, error: getFriendlyErrorMessage(deleteError) };
       }
     } else {
       const { error: insertError } = await supabase.from("likes").insert({
@@ -203,7 +204,7 @@ export async function toggleLikeAction(postId: string): Promise<ActionResult<Lik
       });
 
       if (insertError) {
-        return { success: false, error: insertError.message };
+        return { success: false, error: getFriendlyErrorMessage(insertError) };
       }
 
       liked = true;
@@ -215,7 +216,7 @@ export async function toggleLikeAction(postId: string): Promise<ActionResult<Lik
       .eq("post_id", normalizedPostId);
 
     if (countError) {
-      return { success: false, error: countError.message };
+      return { success: false, error: getFriendlyErrorMessage(countError) };
     }
 
     revalidatePostViews(normalizedPostId);
@@ -227,8 +228,7 @@ export async function toggleLikeAction(postId: string): Promise<ActionResult<Lik
       },
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "좋아요 처리에 실패했습니다.";
-    return { success: false, error: message };
+    return { success: false, error: getFriendlyErrorMessage(error) };
   }
 }
 
@@ -261,14 +261,13 @@ export async function createCommentAction(
       .single();
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: getFriendlyErrorMessage(error) };
     }
 
     revalidatePostViews(normalizedPostId);
     return { success: true, data: data as CommentRow };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "댓글 작성에 실패했습니다.";
-    return { success: false, error: message };
+    return { success: false, error: getFriendlyErrorMessage(error) };
   }
 }
 
@@ -302,14 +301,13 @@ export async function updateCommentAction(
       .single();
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: getFriendlyErrorMessage(error) };
     }
 
     revalidatePostViews(data.post_id as string);
     return { success: true, data: data as CommentRow };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "댓글 수정에 실패했습니다.";
-    return { success: false, error: message };
+    return { success: false, error: getFriendlyErrorMessage(error) };
   }
 }
 
@@ -331,7 +329,10 @@ export async function deleteCommentAction(commentId: string): Promise<ActionResu
       .single();
 
     if (targetReadError || !targetComment) {
-      return { success: false, error: targetReadError?.message ?? "삭제할 댓글을 찾을 수 없습니다." };
+      return {
+        success: false,
+        error: targetReadError ? getFriendlyErrorMessage(targetReadError) : "삭제할 댓글을 찾을 수 없습니다.",
+      };
     }
 
     const { error: deleteError } = await supabase
@@ -341,14 +342,13 @@ export async function deleteCommentAction(commentId: string): Promise<ActionResu
       .eq("user_id", user.id);
 
     if (deleteError) {
-      return { success: false, error: deleteError.message };
+      return { success: false, error: getFriendlyErrorMessage(deleteError) };
     }
 
     revalidatePostViews(targetComment.post_id as string);
     return { success: true, data: { id: normalizedCommentId } };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "댓글 삭제에 실패했습니다.";
-    return { success: false, error: message };
+    return { success: false, error: getFriendlyErrorMessage(error) };
   }
 }
 
@@ -376,7 +376,10 @@ export async function uploadPostImageAction(
       .single();
 
     if (postReadError || !post) {
-      return { success: false, error: postReadError?.message ?? "게시글을 찾을 수 없습니다." };
+      return {
+        success: false,
+        error: postReadError ? getFriendlyErrorMessage(postReadError) : "게시글을 찾을 수 없습니다.",
+      };
     }
 
     if (post.user_id !== user.id) {
@@ -391,7 +394,7 @@ export async function uploadPostImageAction(
       .upload(storagePath, file, { contentType: file.type, upsert: false });
 
     if (uploadError) {
-      return { success: false, error: uploadError.message };
+      return { success: false, error: getFriendlyErrorMessage(uploadError) };
     }
 
     const { data: publicUrlData } = supabase.storage.from("post-images").getPublicUrl(storagePath);
@@ -405,7 +408,7 @@ export async function uploadPostImageAction(
 
     if (updateError) {
       await supabase.storage.from("post-images").remove([storagePath]);
-      return { success: false, error: updateError.message };
+      return { success: false, error: getFriendlyErrorMessage(updateError) };
     }
 
     revalidatePostViews(normalizedPostId);
@@ -417,7 +420,6 @@ export async function uploadPostImageAction(
       },
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "이미지 업로드에 실패했습니다.";
-    return { success: false, error: message };
+    return { success: false, error: getFriendlyErrorMessage(error) };
   }
 }

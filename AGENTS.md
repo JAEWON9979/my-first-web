@@ -4,7 +4,7 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Ch7~Ch11 Shared Agent Rules
+# Ch7~Ch12 Shared Agent Rules
 
 ## Version & Stack (교재 기준 고정)
 
@@ -47,3 +47,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - UI 분기는 보안이 아니며, 실제 보안은 RLS가 담당한다.
 - `service_role` 키는 클라이언트에서 절대 사용하지 않는다
 - SELECT, INSERT, UPDATE, DELETE 정책을 각각 명시적으로 검토한다
+
+## Ch12 기준 (에러 처리와 UX 개선)
+- 목표는 로딩/빈 상태/에러 UI와 폼 검증 보강이다.
+- 기존 CRUD 로직과 파일 구조, 기존 Tailwind 스타일은 최대한 유지한다.
+- shadcn/ui 전면 교체는 하지 않고, 필요한 곳만 점진적으로 보강한다.
+- 대상 화면은 `/posts`, `/posts/[id]`, `/posts/new`, `/login`, `/signup`이다.
+- 실패 케이스는 loading, empty, error, auth/session expired, permission denied(RLS), validation으로 분류한다.
+- 사용자 메시지와 개발자 로그를 분리해서 관리한다.

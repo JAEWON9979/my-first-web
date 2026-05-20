@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase/client";
+import { getFriendlyErrorMessage } from "@/lib/errors";
 import { TabKey } from "@/lib/posts";
 
 type PostDetail = {
@@ -27,7 +28,41 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
   const [content, setContent] = useState(post.content);
   const [category, setCategory] = useState<Exclude<TabKey, "all">>(post.category);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ title: string; content: string }>({
+    title: "",
+    content: "",
+  });
+  const [submitMessage, setSubmitMessage] = useState("");
+
+  const validateForm = () => {
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+
+    const nextFieldErrors = {
+      title: "",
+      content: "",
+    };
+
+    if (!trimmedTitle) {
+      nextFieldErrors.title = "제목은 필수입니다.";
+    } else if (trimmedTitle.length < 2) {
+      nextFieldErrors.title = "제목은 최소 2자 이상이어야 합니다.";
+    }
+
+    if (!trimmedContent) {
+      nextFieldErrors.content = "내용은 필수입니다.";
+    } else if (trimmedContent.length < 5) {
+      nextFieldErrors.content = "내용은 최소 5자 이상이어야 합니다.";
+    }
+
+    setFieldErrors(nextFieldErrors);
+
+    return {
+      isValid: !nextFieldErrors.title && !nextFieldErrors.content,
+      trimmedTitle,
+      trimmedContent,
+    };
+  };
 
   // UI를 숨기는 것은 편의상 제어일 뿐이며, 실제 보안은 Ch11의 RLS로 적용한다.
   const canManagePost = !isLoading && user?.id === post.user_id;
@@ -43,7 +78,7 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
     }
 
     setIsSubmitting(true);
-    setErrorMessage("");
+    setSubmitMessage("");
 
     try {
       const supabase = createClient();
@@ -55,8 +90,8 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
 
       router.push("/posts");
     } catch (deleteError) {
-      const message = deleteError instanceof Error ? deleteError.message : "삭제에 실패했습니다.";
-      setErrorMessage(message);
+      console.error(deleteError);
+      setSubmitMessage(getFriendlyErrorMessage(deleteError));
     } finally {
       setIsSubmitting(false);
     }
@@ -65,26 +100,23 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
   const handleUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!canManagePost) {
+    if (!canManagePost || isSubmitting) {
       return;
     }
 
-    const trimmedTitle = title.trim();
-    const trimmedContent = content.trim();
-
-    if (!trimmedTitle || !trimmedContent) {
-      setErrorMessage("제목과 내용을 모두 입력해주세요.");
+    const validation = validateForm();
+    if (!validation.isValid) {
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMessage("");
+    setSubmitMessage("");
 
     try {
       const supabase = createClient();
       const { error } = await supabase
         .from("posts")
-        .update({ title: trimmedTitle, content: trimmedContent, category })
+        .update({ title: validation.trimmedTitle, content: validation.trimmedContent, category })
         .eq("id", post.id);
 
       if (error) {
@@ -93,8 +125,8 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
 
       router.push("/posts");
     } catch (updateError) {
-      const message = updateError instanceof Error ? updateError.message : "수정에 실패했습니다.";
-      setErrorMessage(message);
+      console.error(updateError);
+      setSubmitMessage(getFriendlyErrorMessage(updateError));
     } finally {
       setIsSubmitting(false);
     }
@@ -131,6 +163,8 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
         ) : null}
       </div>
 
+      {submitMessage ? <p className="mt-4 text-sm text-rose-600 dark:text-rose-300">{submitMessage}</p> : null}
+
       {canManagePost && isEditing ? (
         <form className="mt-6 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-900/40" onSubmit={handleUpdate}>
           <div className="space-y-2">
@@ -138,6 +172,7 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
             <select
               value={category}
               onChange={(event) => setCategory(event.target.value as Exclude<TabKey, "all">)}
+              disabled={isSubmitting}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="goal">목표</option>
@@ -151,28 +186,48 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
             <input
               type="text"
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                if (fieldErrors.title) {
+                  setFieldErrors((previous) => ({ ...previous, title: "" }));
+                }
+                if (submitMessage) {
+                  setSubmitMessage("");
+                }
+              }}
+              disabled={isSubmitting}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
+            {fieldErrors.title ? <p className="text-sm text-rose-600 dark:text-rose-300">{fieldErrors.title}</p> : null}
           </div>
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">내용</label>
             <textarea
               value={content}
-              onChange={(event) => setContent(event.target.value)}
+              onChange={(event) => {
+                setContent(event.target.value);
+                if (fieldErrors.content) {
+                  setFieldErrors((previous) => ({ ...previous, content: "" }));
+                }
+                if (submitMessage) {
+                  setSubmitMessage("");
+                }
+              }}
+              disabled={isSubmitting}
               className="min-h-56 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-7 text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
+            {fieldErrors.content ? <p className="text-sm text-rose-600 dark:text-rose-300">{fieldErrors.content}</p> : null}
           </div>
-
-          {errorMessage ? (
-            <p className="text-sm text-rose-600 dark:text-rose-300">{errorMessage}</p>
-          ) : null}
 
           <div className="flex flex-wrap items-center justify-end gap-2">
             <button
               type="button"
-              onClick={() => setIsEditing(false)}
+              onClick={() => {
+                setIsEditing(false);
+                setFieldErrors({ title: "", content: "" });
+                setSubmitMessage("");
+              }}
               disabled={isSubmitting}
               className="inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-700"
             >

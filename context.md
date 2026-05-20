@@ -2,9 +2,9 @@
 
 ## 기준 정보
 - 워크스페이스: my-first-web
-- 최신 갱신일: 2026-05-18
+- 최신 갱신일: 2026-05-20
 - 스택: Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui
-- Supabase: Chapter 8 DB 연동 완료, Chapter 9 Auth 적용, Chapter 10 게시글 CRUD 완료, Chapter 11 RLS 적용 완료
+- Supabase: Chapter 8 DB 연동 완료, Chapter 9 Auth 적용, Chapter 10 게시글 CRUD 완료, Chapter 11 RLS 적용 완료, Chapter 12 에러 처리와 UX 개선 완료
 
 ## 현재 라우트 스냅샷
 - `/`: 홈
@@ -63,6 +63,18 @@
 - 실제 DB 반영은 `supabase db push` 성공으로 확인되었다.
 - `service_role` 키는 클라이언트에서 사용하지 않는다.
 
+## Ch12 완료 상태
+- ✅ 목표 달성: 로딩/빈 상태/에러 UI와 폼 검증을 보강하고, 기존 CRUD 로직과 컴포넌트 구조 유지
+- 구현 범위: `/posts`, `/posts/[id]`, `/posts/new` 글쓰기 폼에 에러 처리 및 폼 검증 적용
+- 완료 항목:
+  - `app/error.tsx`: use client 지시어 있는 글로벌 에러 경계
+  - `app/loading.tsx`, `app/posts/loading.tsx`, `app/posts/[id]/loading.tsx`: 고정 높이 skeleton 로딩 UI
+  - `lib/errors.ts`: `getFriendlyErrorMessage()` 유틸 함수로 Supabase/네트워크 에러를 사용자 메시지로 변환
+  - `/posts/new`, `/posts/[id]` (수정/삭제), `/posts` 목록: getFriendlyErrorMessage 적용 완료
+  - 폼 검증: 제목/내용 필수 입력, 최소 길이(2자/5자) 확인, 입력 변경 시 에러/메시지 자동 제거
+  - 버튼 비활성화: isSubmitting 상태로 중복 제출 완벽하게 방지
+- 검증 완료: npm run build 성공, 보안 키 유출 없음(git grep), 구버전 API 없음(next/router, auth.signIn() 미사용)
+
 ## 최근 완료 사항
 - Chapter 7 요구사항에 맞춘 4대 핵심 문서 세팅 완료
 - Supabase 프로젝트 연결 및 마이그레이션 완료(`20260504043926_create_tables.sql`)
@@ -77,12 +89,14 @@
 - 로그인/회원가입 직후 `profiles` 동기화 보강
 - `npm run build` 최종 통과 확인
 - RLS 마이그레이션 생성 및 `supabase db push` 완료 확인
+- Ch12 준비를 위한 실패 케이스 정의 초안 수집 완료
 
 ## Ch10 다음 확인 포인트
 - 상세 페이지의 수정/삭제 액션은 UI 제어 수준이며, 실제 권한 보안은 Ch11 RLS에서 적용
 - 목록/상세/작성/수정 모두 App Router 기반으로 유지
 - `next/router` 사용 금지, 데이터 컬럼명 임의 변경 금지
 - Next 16의 `middleware` deprecation 경고는 남아 있으며, 필요 시 `proxy` 전환 검토
+- Ch12에서는 화면별 loading/empty/error/auth/session expired/permission denied(RLS)/validation 상태를 정리한다.
 
 ## 문서 기준 계약 (Source of Truth)
 - `ARCHITECTURE.md`: 설계 기준 단일 문서

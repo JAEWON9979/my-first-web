@@ -16,19 +16,29 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ email: string; password: string; confirm: string }>({
+    email: "",
+    password: "",
+    confirm: "",
+  });
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // 비밀번호 일치 확인
-    if (password !== confirmPassword) {
-      toast.error("비밀번호가 일치하지 않습니다.");
-      return;
-    }
+    // client-side validation
+    const nextErrors = { email: "", password: "", confirm: "" };
+    if (!email.trim()) nextErrors.email = "이메일을 입력하세요.";
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) nextErrors.email = "유효한 이메일을 입력하세요.";
+    if (!password) nextErrors.password = "비밀번호를 입력하세요.";
+    else if (password.length < 6) nextErrors.password = "비밀번호는 최소 6자입니다.";
+    if (password !== confirmPassword) nextErrors.confirm = "비밀번호가 일치하지 않습니다.";
+
+    setFieldErrors(nextErrors);
+    if (nextErrors.email || nextErrors.password || nextErrors.confirm) return;
 
     setIsLoading(true);
 
-    const result = await signUpWithEmail(email, password);
+    const result = await signUpWithEmail(email.trim(), password);
 
     if ("success" in result) {
       toast.success("회원가입 되었습니다. 로그인해주세요.");
@@ -59,6 +69,7 @@ export default function SignupPage() {
                 disabled={isLoading}
                 autoComplete="email"
               />
+              {fieldErrors.email ? <p className="mt-1 text-sm text-rose-600">{fieldErrors.email}</p> : null}
             </div>
 
             <div className="space-y-2">
@@ -72,6 +83,7 @@ export default function SignupPage() {
                 disabled={isLoading}
                 autoComplete="new-password"
               />
+              {fieldErrors.password ? <p className="mt-1 text-sm text-rose-600">{fieldErrors.password}</p> : null}
             </div>
 
             <div className="space-y-2">
@@ -85,6 +97,7 @@ export default function SignupPage() {
                 disabled={isLoading}
                 autoComplete="new-password"
               />
+              {fieldErrors.confirm ? <p className="mt-1 text-sm text-rose-600">{fieldErrors.confirm}</p> : null}
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>

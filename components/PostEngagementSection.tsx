@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ import {
   uploadPostImageAction,
 } from "@/app/actions/post-interactions";
 import { formatAuthorName } from "@/lib/posts";
+import { getFriendlyErrorMessage } from "@/lib/errors";
 
 type CommentItem = {
   id: string;
@@ -78,6 +79,7 @@ export default function PostEngagementSection({
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [comments, setComments] = useState<CommentItem[]>(initialComments);
   const [newComment, setNewComment] = useState("");
+  const [commentError, setCommentError] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
@@ -95,7 +97,14 @@ export default function PostEngagementSection({
     });
   }, [comments]);
 
+  const viewRecordedRef = useRef(false);
+
   useEffect(() => {
+    if (viewRecordedRef.current) {
+      return;
+    }
+
+    viewRecordedRef.current = true;
     startTransition(async () => {
       await recordPostViewAction(postId);
     });
@@ -131,7 +140,7 @@ export default function PostEngagementSection({
       const result = await toggleLikeAction(postId);
 
       if (!result.success || !result.data) {
-        setErrorMessage(result.error ?? "좋아요 처리에 실패했습니다.");
+        setErrorMessage(getFriendlyErrorMessage(result.error ?? undefined));
         return;
       }
 
@@ -151,10 +160,15 @@ export default function PostEngagementSection({
 
     const content = newComment.trim();
     if (!content) {
-      setErrorMessage("댓글 내용을 입력해주세요.");
+      setCommentError("댓글 내용을 입력해주세요.");
+      return;
+    }
+    if (content.length < 2) {
+      setCommentError("댓글은 최소 2자 이상 입력해야 합니다.");
       return;
     }
 
+    setCommentError("");
     setErrorMessage("");
     setMessage("");
 
@@ -162,7 +176,7 @@ export default function PostEngagementSection({
       const result = await createCommentAction(postId, content);
 
       if (!result.success || !result.data) {
-        setErrorMessage(result.error ?? "댓글 작성에 실패했습니다.");
+        setErrorMessage(getFriendlyErrorMessage(result.error ?? undefined));
         return;
       }
 
@@ -215,7 +229,7 @@ export default function PostEngagementSection({
       const result = await updateCommentAction(commentId, content);
 
       if (!result.success || !result.data) {
-        setErrorMessage(result.error ?? "댓글 수정에 실패했습니다.");
+        setErrorMessage(getFriendlyErrorMessage(result.error ?? undefined));
         return;
       }
 
@@ -255,7 +269,7 @@ export default function PostEngagementSection({
       const result = await deleteCommentAction(commentId);
 
       if (!result.success) {
-        setErrorMessage(result.error ?? "댓글 삭제에 실패했습니다.");
+        setErrorMessage(getFriendlyErrorMessage(result.error ?? undefined));
         return;
       }
 
@@ -306,7 +320,7 @@ export default function PostEngagementSection({
       const result = await uploadPostImageAction(postId, selectedImageFile);
 
       if (!result.success || !result.data) {
-        setErrorMessage(result.error ?? "이미지 업로드에 실패했습니다.");
+        setErrorMessage(getFriendlyErrorMessage(result.error ?? undefined));
         return;
       }
 
@@ -404,6 +418,7 @@ export default function PostEngagementSection({
             disabled={isPending || !user}
             className="min-h-24 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
+          {commentError ? <p className="mt-1 text-sm text-rose-600">{commentError}</p> : null}
           <div className="flex justify-end">
             <button
               type="submit"

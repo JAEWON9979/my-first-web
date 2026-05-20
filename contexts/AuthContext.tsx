@@ -10,6 +10,7 @@ import {
 } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { getFriendlyErrorMessage } from "@/lib/errors";
 
 type AuthContextValue = {
   user: User | null;
@@ -34,7 +35,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // 현재 세션 확인
     supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
       if (sessionError) {
-        setError(sessionError.message);
+        setError(getFriendlyErrorMessage(sessionError));
         setIsLoading(false);
         return;
       }

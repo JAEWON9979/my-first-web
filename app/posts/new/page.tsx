@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
+import { getFriendlyErrorMessage } from "@/lib/errors";
 import { TabKey } from "@/lib/posts";
 
 export default function NewPostPage() {
@@ -17,12 +18,46 @@ export default function NewPostPage() {
   const [content, setContent] = useState("");
   const [category, setCategory] = useState<Exclude<TabKey, "all">>("goal");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ title: string; content: string }>({
+    title: "",
+    content: "",
+  });
+  const [submitMessage, setSubmitMessage] = useState("");
+
+  const validateForm = () => {
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+
+    const nextFieldErrors = {
+      title: "",
+      content: "",
+    };
+
+    if (!trimmedTitle) {
+      nextFieldErrors.title = "제목은 필수입니다.";
+    } else if (trimmedTitle.length < 2) {
+      nextFieldErrors.title = "제목은 최소 2자 이상이어야 합니다.";
+    }
+
+    if (!trimmedContent) {
+      nextFieldErrors.content = "내용은 필수입니다.";
+    } else if (trimmedContent.length < 5) {
+      nextFieldErrors.content = "내용은 최소 5자 이상이어야 합니다.";
+    }
+
+    setFieldErrors(nextFieldErrors);
+
+    return {
+      isValid: !nextFieldErrors.title && !nextFieldErrors.content,
+      trimmedTitle,
+      trimmedContent,
+    };
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (isLoading) {
+    if (isLoading || isSubmitting) {
       return;
     }
 
@@ -32,20 +67,12 @@ export default function NewPostPage() {
       return;
     }
 
-    const trimmedTitle = title.trim();
-    const trimmedContent = content.trim();
-
-    if (!trimmedTitle) {
-      setErrorMessage("제목을 입력해주세요.");
+    const validation = validateForm();
+    if (!validation.isValid) {
       return;
     }
 
-    if (!trimmedContent) {
-      setErrorMessage("내용을 입력해주세요.");
-      return;
-    }
-
-    setErrorMessage("");
+    setSubmitMessage("");
     setIsSubmitting(true);
 
     try {
@@ -63,8 +90,8 @@ export default function NewPostPage() {
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
         category,
-        title: trimmedTitle,
-        content: trimmedContent,
+        title: validation.trimmedTitle,
+        content: validation.trimmedContent,
       });
 
       if (error) {
@@ -73,8 +100,8 @@ export default function NewPostPage() {
 
       router.push("/posts");
     } catch (submitError) {
-      const message = submitError instanceof Error ? submitError.message : "게시글 저장에 실패했습니다.";
-      setErrorMessage(message);
+      console.error(submitError);
+      setSubmitMessage(getFriendlyErrorMessage(submitError));
     } finally {
       setIsSubmitting(false);
     }
@@ -91,9 +118,9 @@ export default function NewPostPage() {
           </p>
         </div>
 
-        {errorMessage ? (
+        {submitMessage ? (
           <div className="mb-6 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300">
-            {errorMessage}
+            {submitMessage}
           </div>
         ) : null}
 
@@ -105,12 +132,21 @@ export default function NewPostPage() {
             <Input
               id="title"
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                if (fieldErrors.title) {
+                  setFieldErrors((previous) => ({ ...previous, title: "" }));
+                }
+                if (submitMessage) {
+                  setSubmitMessage("");
+                }
+              }}
               placeholder="게시글 제목을 입력하세요"
               autoComplete="off"
               disabled={isSubmitting || isLoading}
               className="h-12 rounded-lg border-slate-300 bg-white px-4 text-base text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
+            {fieldErrors.title ? <p className="text-sm text-rose-600 dark:text-rose-300">{fieldErrors.title}</p> : null}
           </div>
 
           <div className="space-y-2">
@@ -137,11 +173,20 @@ export default function NewPostPage() {
             <Textarea
               id="content"
               value={content}
-              onChange={(event) => setContent(event.target.value)}
+              onChange={(event) => {
+                setContent(event.target.value);
+                if (fieldErrors.content) {
+                  setFieldErrors((previous) => ({ ...previous, content: "" }));
+                }
+                if (submitMessage) {
+                  setSubmitMessage("");
+                }
+              }}
               placeholder="마크다운 형식으로 본문을 입력하세요"
               disabled={isSubmitting || isLoading}
               className="min-h-[22rem] rounded-lg border-slate-300 bg-white px-4 py-3 text-base leading-7 text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
+            {fieldErrors.content ? <p className="text-sm text-rose-600 dark:text-rose-300">{fieldErrors.content}</p> : null}
           </div>
 
           <div className="flex justify-end border-t border-slate-200 pt-6 dark:border-slate-700">

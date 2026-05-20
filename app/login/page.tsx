@@ -13,12 +13,23 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ email: string; password: string }>({ email: "", password: "" });
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // client-side validation
+    const nextErrors = { email: "", password: "" };
+    if (!email.trim()) nextErrors.email = "이메일을 입력하세요.";
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) nextErrors.email = "유효한 이메일을 입력하세요.";
+    if (!password) nextErrors.password = "비밀번호를 입력하세요.";
+    else if (password.length < 6) nextErrors.password = "비밀번호는 최소 6자입니다.";
+
+    setFieldErrors(nextErrors);
+    if (nextErrors.email || nextErrors.password) return;
+
     setIsLoading(true);
 
-    const result = await signInWithEmail(email, password);
+    const result = await signInWithEmail(email.trim(), password);
 
     if ("success" in result) {
       toast.success("로그인되었습니다.");
@@ -50,6 +61,7 @@ export default function LoginPage() {
                 disabled={isLoading}
                 autoComplete="email"
               />
+              {fieldErrors.email ? <p className="mt-1 text-sm text-rose-600">{fieldErrors.email}</p> : null}
             </div>
 
             <div className="space-y-2">
@@ -63,6 +75,7 @@ export default function LoginPage() {
                 disabled={isLoading}
                 autoComplete="current-password"
               />
+              {fieldErrors.password ? <p className="mt-1 text-sm text-rose-600">{fieldErrors.password}</p> : null}
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
