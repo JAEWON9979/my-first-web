@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { getFriendlyErrorMessage } from "@/lib/errors";
+import { validateImageSize } from "@/lib/utils/validation";
 
-const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
 
@@ -123,8 +123,9 @@ function validateImageFile(file: File): string | null {
     return "이미지 파일이 필요합니다.";
   }
 
-  if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    return "이미지는 2MB 이하만 업로드할 수 있습니다.";
+  const sizeError = validateImageSize(file);
+  if (sizeError) {
+    return sizeError;
   }
 
   const fileExtension = getFileExtension(file.name);

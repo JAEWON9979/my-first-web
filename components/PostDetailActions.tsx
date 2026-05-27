@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import { getFriendlyErrorMessage } from "@/lib/errors";
 import { TabKey } from "@/lib/posts";
+import { validatePost } from "@/lib/utils/validation";
 
 type PostDetail = {
   id: string;
@@ -33,36 +34,6 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
     content: "",
   });
   const [submitMessage, setSubmitMessage] = useState("");
-
-  const validateForm = () => {
-    const trimmedTitle = title.trim();
-    const trimmedContent = content.trim();
-
-    const nextFieldErrors = {
-      title: "",
-      content: "",
-    };
-
-    if (!trimmedTitle) {
-      nextFieldErrors.title = "제목은 필수입니다.";
-    } else if (trimmedTitle.length < 2) {
-      nextFieldErrors.title = "제목은 최소 2자 이상이어야 합니다.";
-    }
-
-    if (!trimmedContent) {
-      nextFieldErrors.content = "내용은 필수입니다.";
-    } else if (trimmedContent.length < 5) {
-      nextFieldErrors.content = "내용은 최소 5자 이상이어야 합니다.";
-    }
-
-    setFieldErrors(nextFieldErrors);
-
-    return {
-      isValid: !nextFieldErrors.title && !nextFieldErrors.content,
-      trimmedTitle,
-      trimmedContent,
-    };
-  };
 
   // UI를 숨기는 것은 편의상 제어일 뿐이며, 실제 보안은 Ch11의 RLS로 적용한다.
   const canManagePost = !isLoading && user?.id === post.user_id;
@@ -104,7 +75,8 @@ export default function PostDetailActions({ post }: PostDetailActionsProps) {
       return;
     }
 
-    const validation = validateForm();
+    const validation = validatePost({ title, content });
+    setFieldErrors(validation.fieldErrors);
     if (!validation.isValid) {
       return;
     }

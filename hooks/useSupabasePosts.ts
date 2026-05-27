@@ -42,7 +42,7 @@ function mapRowToPost(row: SupabasePostRow): ListPost {
     content: row.content,
     created_at: formatDate(row.created_at),
     user_id: row.user_id,
-    category: row.category ?? "goal",
+    category: row.category ?? "general",
     author_name: formatAuthorName(row.profiles?.username, row.user_id),
     like_count: 0,
     view_count: 0,

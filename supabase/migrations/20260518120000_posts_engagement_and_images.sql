@@ -30,7 +30,7 @@ create index if not exists comments_user_id_idx
   on public.comments (user_id);
 
 -- RLS: likes
---alter table public.likes enable row level security;
+alter table public.likes enable row level security;
 
 drop policy if exists "likes: public read access" on public.likes;
 drop policy if exists "likes: authenticated insert own like" on public.likes;

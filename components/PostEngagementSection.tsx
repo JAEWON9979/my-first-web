@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase/client";
+import { validateImageSize } from "@/lib/utils/validation";
 import {
   createCommentAction,
   deleteCommentAction,
@@ -34,7 +35,6 @@ type PostEngagementSectionProps = {
   initialImageUrl: string | null;
 };
 
-const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
 
@@ -48,8 +48,9 @@ function validateClientImageFile(file: File): string | null {
     return "이미지 파일을 선택해주세요.";
   }
 
-  if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    return "이미지는 2MB 이하만 업로드할 수 있습니다.";
+  const sizeError = validateImageSize(file);
+  if (sizeError) {
+    return sizeError;
   }
 
   const extension = getFileExtension(file.name);
@@ -104,9 +105,28 @@ export default function PostEngagementSection({
       return;
     }
 
+    const viewKey = `viewed_post_${postId}`;
+
+    try {
+      if (sessionStorage.getItem(viewKey)) {
+        viewRecordedRef.current = true;
+        return;
+      }
+    } catch {
+      // sessionStorage가 막힌 환경에서는 기존 동작을 유지한다.
+    }
+
     viewRecordedRef.current = true;
     startTransition(async () => {
-      await recordPostViewAction(postId);
+      const result = await recordPostViewAction(postId);
+
+      if (result.success) {
+        try {
+          sessionStorage.setItem(viewKey, "true");
+        } catch {
+          // 저장 실패는 조회 흐름을 막지 않는다.
+        }
+      }
     });
   }, [postId]);
 

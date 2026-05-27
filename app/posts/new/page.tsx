@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { getFriendlyErrorMessage } from "@/lib/errors";
 import { TabKey } from "@/lib/posts";
+import { validatePost } from "@/lib/utils/validation";
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -24,36 +25,6 @@ export default function NewPostPage() {
   });
   const [submitMessage, setSubmitMessage] = useState("");
 
-  const validateForm = () => {
-    const trimmedTitle = title.trim();
-    const trimmedContent = content.trim();
-
-    const nextFieldErrors = {
-      title: "",
-      content: "",
-    };
-
-    if (!trimmedTitle) {
-      nextFieldErrors.title = "제목은 필수입니다.";
-    } else if (trimmedTitle.length < 2) {
-      nextFieldErrors.title = "제목은 최소 2자 이상이어야 합니다.";
-    }
-
-    if (!trimmedContent) {
-      nextFieldErrors.content = "내용은 필수입니다.";
-    } else if (trimmedContent.length < 5) {
-      nextFieldErrors.content = "내용은 최소 5자 이상이어야 합니다.";
-    }
-
-    setFieldErrors(nextFieldErrors);
-
-    return {
-      isValid: !nextFieldErrors.title && !nextFieldErrors.content,
-      trimmedTitle,
-      trimmedContent,
-    };
-  };
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -67,7 +38,8 @@ export default function NewPostPage() {
       return;
     }
 
-    const validation = validateForm();
+    const validation = validatePost({ title, content });
+    setFieldErrors(validation.fieldErrors);
     if (!validation.isValid) {
       return;
     }

@@ -1,6 +1,7 @@
-export type TabKey = "all" | "goal" | "study" | "project";
+export type TabKey = "all" | "general" | "goal" | "study" | "project";
 
 export const categoryLabelMap: Record<Exclude<TabKey, "all">, string> = {
+  general: "기타",
   goal: "커뮤니티",
   study: "수업일지",
   project: "프로젝트",
