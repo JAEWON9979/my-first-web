@@ -65,38 +65,20 @@ export default function PostEngagementSection({
     });
   }, [comments]);
 
-  const viewRecordedRef = useRef(false);
+const viewRecordedRef = useRef(false);
 
   useEffect(() => {
+    // 개발 모드에서 2번씩(혹은 4번씩) 오르는 것을 막기 위한 방어막
     if (viewRecordedRef.current) {
       return;
     }
-
-    const viewKey = `viewed_post_${postId}`;
-
-    try {
-      if (sessionStorage.getItem(viewKey)) {
-        viewRecordedRef.current = true;
-        return;
-      }
-    } catch {
-      // sessionStorage가 막힌 환경에서는 기존 동작을 유지한다.
-    }
-
     viewRecordedRef.current = true;
-    startTransition(async () => {
-      const result = await recordPostViewAction(postId);
 
-      if (result.success) {
-        try {
-          sessionStorage.setItem(viewKey, "true");
-        } catch {
-          // 저장 실패는 조회 흐름을 막지 않는다.
-        }
-      }
+    // 복잡한 sessionStorage 로직은 전부 삭제하고 무조건 서버 액션 실행!
+    startTransition(async () => {
+      await recordPostViewAction(postId);
     });
   }, [postId]);
-
   useEffect(() => {
     if (!user) {
       return;
