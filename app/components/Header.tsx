@@ -24,21 +24,21 @@ export default function Header() {
 
   return (
     <header className="border-b border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
         {/* 좌측: 로고 */}
         <div>
           <p className="text-xs font-semibold tracking-[0.18em] text-emerald-700">
             JAEWON BLOG
           </p>
-          <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 md:text-xl">
+          <h1 className="text-base font-bold text-slate-900 dark:text-slate-100 md:text-xl">
             김재원 개인 블로그
           </h1>
         </div>
 
         {/* 우측: 네비게이션 + 인증 버튼 + 다크모드 토글 */}
-        <div className="flex items-center gap-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
           {/* 네비게이션 링크 */}
-          <ul className="flex gap-6 text-sm">
+          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm md:gap-6">
             <li>
               <Link
                 href="/"
@@ -76,12 +76,12 @@ export default function Header() {
           </ul>
 
           {/* 인증 버튼 + 다크모드 토글 */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             {isLoading ? (
               <div className="h-8 w-20 animate-pulse rounded bg-slate-300 dark:bg-slate-600" />
             ) : user ? (
               <>
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <span className="max-w-[10rem] truncate text-sm font-medium text-slate-700 dark:text-slate-300 md:max-w-none">
                   {user.email}
                 </span>
                 <button

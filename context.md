@@ -2,9 +2,9 @@
 
 ## 기준 정보
 - 워크스페이스: my-first-web
-- 최신 갱신일: 2026-05-20
+- 최신 갱신일: 2026-05-27
 - 스택: Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui
-- Supabase: Chapter 8 DB 연동 완료, Chapter 9 Auth 적용, Chapter 10 게시글 CRUD 완료, Chapter 11 RLS 적용 완료, Chapter 12 에러 처리와 UX 개선 완료
+- Supabase: Chapter 8 DB 연동 완료, Chapter 9 Auth 적용, Chapter 10 게시글 CRUD 완료, Chapter 11 RLS 적용 완료, Chapter 12 에러 처리와 UX 개선 완료, Chapter 13 최종 검증 완료
 
 ## 현재 라우트 스냅샷
 - `/`: 홈
@@ -75,6 +75,12 @@
   - 버튼 비활성화: isSubmitting 상태로 중복 제출 완벽하게 방지
 - 검증 완료: npm run build 성공, 보안 키 유출 없음(git grep), 구버전 API 없음(next/router, auth.signIn() 미사용)
 
+## Ch13 검증 상태
+- Playwright E2E 테스트 파일 `tests/auth-crud.spec.ts` 작성 완료
+- 조회수 중복 방지, `general` 카테고리 안전망, 검증 유틸 분리 반영 완료
+- 최종 검증 보고서는 `docs/ch13a.md`에 추가되었고, 사용자 확인으로 모두 확인 완료 상태로 갱신됨
+- 배포 URL과 Playwright 결과는 사용자 직접 검증으로 최종 확인 완료
+
 ## 최근 완료 사항
 - Chapter 7 요구사항에 맞춘 4대 핵심 문서 세팅 완료
 - Supabase 프로젝트 연결 및 마이그레이션 완료(`20260504043926_create_tables.sql`)
@@ -90,13 +96,9 @@
 - `npm run build` 최종 통과 확인
 - RLS 마이그레이션 생성 및 `supabase db push` 완료 확인
 - Ch12 준비를 위한 실패 케이스 정의 초안 수집 완료
-
-## Ch10 다음 확인 포인트
-- 상세 페이지의 수정/삭제 액션은 UI 제어 수준이며, 실제 권한 보안은 Ch11 RLS에서 적용
-- 목록/상세/작성/수정 모두 App Router 기반으로 유지
-- `next/router` 사용 금지, 데이터 컬럼명 임의 변경 금지
-- Next 16의 `middleware` deprecation 경고는 남아 있으며, 필요 시 `proxy` 전환 검토
-- Ch12에서는 화면별 loading/empty/error/auth/session expired/permission denied(RLS)/validation 상태를 정리한다.
+- Ch13용 Playwright E2E 테스트와 코드리뷰 반영 완료
+- 조회수 방어/sessionStorage, `general` 카테고리, 공용 검증 유틸 분리 완료
+- Chapter 13 최종 검증 완료
 
 ## 문서 기준 계약 (Source of Truth)
 - `ARCHITECTURE.md`: 설계 기준 단일 문서

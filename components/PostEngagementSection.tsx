@@ -5,14 +5,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase/client";
-import { validateImageSize } from "@/lib/utils/validation";
 import {
   createCommentAction,
   deleteCommentAction,
   recordPostViewAction,
   toggleLikeAction,
   updateCommentAction,
-  uploadPostImageAction,
 } from "@/app/actions/post-interactions";
 import { formatAuthorName } from "@/lib/posts";
 import { getFriendlyErrorMessage } from "@/lib/errors";
@@ -35,36 +33,6 @@ type PostEngagementSectionProps = {
   initialImageUrl: string | null;
 };
 
-const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
-
-function getFileExtension(fileName: string): string {
-  const split = fileName.toLowerCase().split(".");
-  return split.length > 1 ? split[split.length - 1] : "";
-}
-
-function validateClientImageFile(file: File): string | null {
-  if (!file || file.size <= 0) {
-    return "이미지 파일을 선택해주세요.";
-  }
-
-  const sizeError = validateImageSize(file);
-  if (sizeError) {
-    return sizeError;
-  }
-
-  const extension = getFileExtension(file.name);
-  if (!ALLOWED_IMAGE_EXTENSIONS.has(extension)) {
-    return "지원하지 않는 확장자입니다. (jpg, jpeg, png, webp만 허용)";
-  }
-
-  if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
-    return "지원하지 않는 파일 형식입니다. (image/jpeg, image/png, image/webp만 허용)";
-  }
-
-  return null;
-}
-
 export default function PostEngagementSection({
   postId,
   postUserId,
@@ -83,7 +51,6 @@ export default function PostEngagementSection({
   const [commentError, setCommentError] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
-  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(initialImageUrl);
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -298,79 +265,8 @@ export default function PostEngagementSection({
     });
   };
 
-  const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
-    if (!file) {
-      setSelectedImageFile(null);
-      return;
-    }
-
-    const validationError = validateClientImageFile(file);
-    if (validationError) {
-      setSelectedImageFile(null);
-      setErrorMessage(validationError);
-      return;
-    }
-
-    setErrorMessage("");
-    setSelectedImageFile(file);
-  };
-
-  const handleImageUpload = () => {
-    if (!isPostOwner) {
-      setErrorMessage("본인 글에만 이미지를 업로드할 수 있습니다.");
-      return;
-    }
-
-    if (!selectedImageFile) {
-      setErrorMessage("업로드할 이미지를 선택해주세요.");
-      return;
-    }
-
-    const validationError = validateClientImageFile(selectedImageFile);
-    if (validationError) {
-      setErrorMessage(validationError);
-      return;
-    }
-
-    setErrorMessage("");
-    setMessage("");
-
-    startTransition(async () => {
-      const result = await uploadPostImageAction(postId, selectedImageFile);
-
-      if (!result.success || !result.data) {
-        setErrorMessage(getFriendlyErrorMessage(result.error ?? undefined));
-        return;
-      }
-
-      setImageUrl(result.data.imageUrl);
-      setSelectedImageFile(null);
-      setMessage("이미지가 업로드되었습니다.");
-    });
-  };
-
   return (
     <section className="mt-10 space-y-6 border-t border-slate-200 pt-6 dark:border-slate-700">
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40">
-        <div>
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">좋아요</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">총 {likeCount}개</p>
-        </div>
-        <button
-          type="button"
-          onClick={handleLikeToggle}
-          disabled={isPending}
-          className={`rounded-md px-4 py-2 text-sm font-medium transition ${
-            liked
-              ? "bg-emerald-700 text-white hover:bg-emerald-800"
-              : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-700"
-          }`}
-        >
-          {liked ? "좋아요 취소" : "좋아요"}
-        </button>
-      </div>
-
       <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">이미지 첨부</h2>
@@ -393,6 +289,7 @@ export default function PostEngagementSection({
               alt="게시글 이미지"
               width={1200}
               height={800}
+              unoptimized
               className="h-auto w-full object-contain"
               sizes="100vw"
             />
@@ -401,30 +298,26 @@ export default function PostEngagementSection({
           <p className="text-sm text-slate-500 dark:text-slate-400">등록된 이미지가 없습니다.</p>
         )}
 
-        {isPostOwner ? (
-          <div className="space-y-2">
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleImageFileChange}
-              disabled={isPending}
-              className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border file:border-slate-300 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 dark:text-slate-300 dark:file:border-slate-600 dark:file:bg-slate-900 dark:file:text-slate-100"
-            />
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              2MB 이하 jpg/jpeg/png/webp 파일만 허용됩니다.
-            </p>
-            <button
-              type="button"
-              onClick={handleImageUpload}
-              disabled={isPending || !selectedImageFile}
-              className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isPending ? "업로드 중..." : "이미지 업로드"}
-            </button>
-          </div>
-        ) : (
-          <p className="text-xs text-slate-500 dark:text-slate-400">이미지 업로드는 작성자만 가능합니다.</p>
-        )}
+        {isPostOwner ? <p className="text-xs text-slate-500 dark:text-slate-400">이미지 업로드는 작성자만 가능합니다.</p> : null}
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">좋아요</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">총 {likeCount}개</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleLikeToggle}
+          disabled={isPending}
+          className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+            liked
+              ? "bg-emerald-700 text-white hover:bg-emerald-800"
+              : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-700"
+          }`}
+        >
+          {liked ? "좋아요 취소" : "좋아요"}
+        </button>
       </div>
 
       <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40">

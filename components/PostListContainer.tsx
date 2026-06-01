@@ -49,17 +49,17 @@ export default function PostListContainer() {
   return (
     <section className="flex min-h-[68vh] flex-col border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800">
       <div className="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold text-emerald-700">Supabase Posts</p>
             <h1 className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">블로그 목록</h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 md:justify-end">
             <select
               value={sortOrder}
               onChange={(event) => setSortOrder(event.target.value as SortOrder)}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              className="min-w-[6.5rem] rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="newest">최신순</option>
               <option value="oldest">오래된순</option>
@@ -75,7 +75,7 @@ export default function PostListContainer() {
           </div>
         </div>
 
-        <ul className="mt-4 flex flex-wrap gap-1 text-sm">
+        <ul className="mt-4 flex flex-wrap gap-1 text-xs sm:text-sm">
           {tabs.map((tab) => (
             <li key={tab.key}>
               <button
@@ -111,14 +111,14 @@ export default function PostListContainer() {
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">이 카테고리의 게시글이 없습니다.</p>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 gap-6 p-4 md:grid-cols-2 md:p-5">
+        <ul className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 md:gap-6 md:p-5">
           {sortedPosts.map((post) => (
             <li key={post.id}>
               <Link href={`/posts/${post.id}`} className="block h-full">
-                <article className="flex h-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-200 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-800">
+                <article className="flex h-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-800 md:p-5">
                   <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                     <span className="font-semibold text-emerald-700">[{getCategoryLabel(post.category)}]</span>
-                    <span>{post.created_at}</span>
+                    <span>{post.created_at_label}</span>
                   </div>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{post.title}</h2>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">

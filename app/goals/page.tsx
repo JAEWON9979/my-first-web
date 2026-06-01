@@ -59,10 +59,10 @@ export default async function GoalsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-cyan-50 to-white pb-20">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-6 md:py-8">
         {/* 헤더 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">목표</h1>
+          <h1 className="mb-2 text-2xl font-bold text-slate-800 md:text-3xl">목표</h1>
           <p className="text-lg font-semibold text-cyan-700">{year} GOALS</p>
           <p className="text-base text-slate-600">
             목표 진행률 ({monthName}월 {weekOfMonth}주차)
@@ -73,7 +73,7 @@ export default async function GoalsPage() {
         </div>
 
         {/* 프로그레스 바 섹션 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
           {/* 년 목표 */}
           <Card className="p-4 bg-cyan-50 border-0">
             <p className="text-sm font-medium text-slate-700 mb-2">년 목표</p>
@@ -120,7 +120,7 @@ export default async function GoalsPage() {
         </div>
 
         {/* 목표 섹션들 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
           <GoalsSection
             category="year"
             title={`년 목표 (${year}년)`}

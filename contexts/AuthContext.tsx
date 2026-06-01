@@ -32,17 +32,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const supabase = createClient();
 
-    // 현재 세션 확인
-    supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
-      if (sessionError) {
-        setError(getFriendlyErrorMessage(sessionError));
-        setIsLoading(false);
-        return;
-      }
+    async function loadSession() {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
+        if (sessionError) {
+          const errorText = sessionError.message.toLowerCase();
+
+          if (errorText.includes("invalid refresh token") || errorText.includes("refresh token not found")) {
+            await supabase.auth.signOut();
+            setUser(null);
+            setError(null);
+          } else {
+            setError(getFriendlyErrorMessage(sessionError));
+          }
+
+          setIsLoading(false);
+          return;
+        }
+
+        setUser(session?.user ?? null);
+      } catch (caughtError) {
+        const errorText = caughtError instanceof Error ? caughtError.message.toLowerCase() : "";
+
+        if (errorText.includes("invalid refresh token") || errorText.includes("refresh token not found")) {
+          await supabase.auth.signOut();
+          setUser(null);
+          setError(null);
+        } else {
+          setError(getFriendlyErrorMessage(caughtError));
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadSession();
 
     // 인증 상태 변화 감지
     const {

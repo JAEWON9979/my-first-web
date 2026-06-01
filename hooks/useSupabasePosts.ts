@@ -10,6 +10,7 @@ type ListPost = {
   title: string;
   content: string;
   created_at: string;
+  created_at_label: string;
   user_id: string;
   category: Exclude<TabKey, "all">;
   author_name: string;
@@ -40,7 +41,8 @@ function mapRowToPost(row: SupabasePostRow): ListPost {
     id: row.id,
     title: row.title,
     content: row.content,
-    created_at: formatDate(row.created_at),
+    created_at: row.created_at ?? "",
+    created_at_label: formatDate(row.created_at),
     user_id: row.user_id,
     category: row.category ?? "general",
     author_name: formatAuthorName(row.profiles?.username, row.user_id),

@@ -39,6 +39,10 @@ type ImageUploadResult = {
   storagePath: string;
 };
 
+type ImageDeleteResult = {
+  imageUrl: string;
+};
+
 type OptionalActionClient = {
   supabase: ReturnType<typeof createServerClient>;
   userId: string | null;
@@ -116,6 +120,22 @@ function getFileExtension(fileName: string): string {
 
 function sanitizeFileName(fileName: string): string {
   return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+function getStoragePathFromImageUrl(imageUrl: string): string | null {
+  try {
+    const parsedUrl = new URL(imageUrl);
+    const marker = "/storage/v1/object/public/post-images/";
+    const markerIndex = parsedUrl.pathname.indexOf(marker);
+
+    if (markerIndex === -1) {
+      return null;
+    }
+
+    return decodeURIComponent(parsedUrl.pathname.slice(markerIndex + marker.length));
+  } catch {
+    return null;
+  }
 }
 
 function validateImageFile(file: File): string | null {
@@ -420,6 +440,58 @@ export async function uploadPostImageAction(
         storagePath,
       },
     };
+  } catch (error) {
+    return { success: false, error: getFriendlyErrorMessage(error) };
+  }
+}
+
+export async function deletePostImageAction(postId: string): Promise<ActionResult<ImageDeleteResult>> {
+  try {
+    const normalizedPostId = postId.trim();
+    if (!normalizedPostId) {
+      return { success: false, error: "유효한 게시글 ID가 필요합니다." };
+    }
+
+    const { supabase, user } = await getActionClient();
+
+    const { data: post, error: postReadError } = await supabase
+      .from("posts")
+      .select("id, user_id, image_url")
+      .eq("id", normalizedPostId)
+      .single();
+
+    if (postReadError || !post) {
+      return {
+        success: false,
+        error: postReadError ? getFriendlyErrorMessage(postReadError) : "게시글을 찾을 수 없습니다.",
+      };
+    }
+
+    if (post.user_id !== user.id) {
+      return { success: false, error: "본인 글의 이미지만 삭제할 수 있습니다." };
+    }
+
+    if (!post.image_url) {
+      return { success: false, error: "삭제할 이미지가 없습니다." };
+    }
+
+    const storagePath = getStoragePathFromImageUrl(post.image_url);
+    if (storagePath) {
+      await supabase.storage.from("post-images").remove([storagePath]);
+    }
+
+    const { error: updateError } = await supabase
+      .from("posts")
+      .update({ image_url: null })
+      .eq("id", normalizedPostId)
+      .eq("user_id", user.id);
+
+    if (updateError) {
+      return { success: false, error: getFriendlyErrorMessage(updateError) };
+    }
+
+    revalidatePostViews(normalizedPostId);
+    return { success: true, data: { imageUrl: post.image_url } };
   } catch (error) {
     return { success: false, error: getFriendlyErrorMessage(error) };
   }

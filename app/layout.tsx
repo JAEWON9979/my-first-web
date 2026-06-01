@@ -21,15 +21,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
-      <body className="flex min-h-screen flex-col bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100">
+      <body className="flex min-h-screen flex-col overflow-x-hidden bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100">
         <AuthProvider>
         <ThemeProvider>
         <ToastProvider />
         <Header />
-        <main>{children}</main>
+        <main className="flex-1 pb-20 md:pb-0">{children}</main>
 
-        <footer className="fixed bottom-0 left-0 w-full z-50 bg-black py-3 px-6 text-gray-300">
-          <div className="flex items-center justify-center gap-4 text-sm">
+        <footer className="fixed bottom-0 left-0 z-50 w-full bg-black px-4 py-3 text-gray-300 md:px-6">
+          <div className="flex flex-col items-center justify-center gap-2 text-center text-xs md:flex-row md:gap-4 md:text-sm">
             <span className="font-bold text-white">바로가기</span>
             <a href="https://github.com/JAEWON9979" target="_blank" rel="noopener noreferrer" className="hover:text-white">
               GitHub 사이트 이동

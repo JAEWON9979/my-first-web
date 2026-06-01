@@ -182,15 +182,15 @@ export function GoalsSection({
   };
 
   return (
-    <Card className="p-6 border-0 bg-white rounded-lg">
+    <Card className="rounded-lg border-0 bg-white p-4 sm:p-6">
       <h3 className="mb-4 text-base font-semibold text-slate-800">{title}</h3>
 
-      <div className={`space-y-3 mb-4 ${isPending ? "opacity-60" : ""}`}>
+      <div className={`mb-4 space-y-3 ${isPending ? "opacity-60" : ""}`}>
         {displayedGoals.length === 0 ? (
           <p className="text-sm text-slate-400">목표가 없습니다</p>
         ) : (
           displayedGoals.map((goal) => (
-            <div key={goal.id} className="flex items-center gap-3">
+            <div key={goal.id} className="flex items-start gap-3">
               <input
                 type="checkbox"
                 checked={goal.is_completed}
@@ -199,13 +199,13 @@ export function GoalsSection({
                 className="w-4 h-4 rounded border-slate-300 cursor-pointer disabled:opacity-50"
               />
               {editingGoalId === goal.id ? (
-                <div className="flex flex-1 items-center gap-2">
+                <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
                   <Input
                     type="text"
                     value={editingTitle}
                     onChange={(e) => setEditingTitle(e.target.value)}
                     disabled={isPending}
-                    className="h-8 text-sm"
+                    className="h-8 w-full text-sm"
                   />
                   <Button
                     type="button"
@@ -231,7 +231,7 @@ export function GoalsSection({
               ) : (
                 <>
                   <span
-                    className={`flex-1 text-sm transition-all ${
+                    className={`min-w-0 flex-1 break-words text-sm transition-all ${
                       goal.is_completed
                         ? "line-through text-slate-400"
                         : "text-slate-700"
@@ -266,14 +266,14 @@ export function GoalsSection({
         )}
       </div>
 
-      <form onSubmit={handleAddGoal} className="flex gap-2">
+      <form onSubmit={handleAddGoal} className="flex gap-2 sm:flex-row">
         <Input
           type="text"
           placeholder="새 목표 추가..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isPending}
-          className="text-sm h-9"
+          className="h-9 min-w-0 flex-1 text-sm"
         />
         <Button
           type="submit"
